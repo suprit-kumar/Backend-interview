@@ -254,3 +254,4 @@ Build order after approval, for your review: Phase 1 shell and engine, then Phas
 - Batch 4 done: Architecture (9 topics, one file each) -> 40 written. Sims: load-balancer, rate-limiter (2/9, below the 60% target); worked examples for rate-limiting, idempotency, pagination come from worked.js. Verify 19/19.
 
 Batch 5 done (Resilience): 46/77 topics written.
+Batch 6 done (Distributed Systems): 54/77 topics written.
