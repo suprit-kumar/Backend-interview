@@ -1,0 +1,191 @@
+/* Concurrency & Messaging: Multithreading & Concurrency. Playground: js/sims/thread-race.js. */
+Atlas.topics.push({
+  id: 'multithreading-concurrency',
+  category: 'concurrency-messaging',
+  title: 'Multithreading & Concurrency',
+  source: {
+    description: 'Many tasks in progress at once; shared state needs care.',
+    steps: ['Spawn threads', 'Share memory', 'Lock critical section', 'Join'],
+  },
+  estMinutes: 15,
+  prereqs: [],
+  related: ['asynchronous-programming', 'database-locking', 'optimistic-pessimistic-concurrency-control', 'message-queues'],
+  tags: ['threads', 'race condition', 'mutex', 'deadlock', 'GIL', 'atomic', 'thread safety'],
+  visual: {
+    type: 'timeline-swimlane',
+    config: {
+      lanes: [{ id: 't1', label: 'Thread A' }, { id: 't2', label: 'Thread B' }],
+      total: 10,
+      unit: 't',
+      windows: [{ start: 3, end: 6, label: 'critical section' }],
+      blocks: [
+        { lane: 't1', start: 0, end: 3, label: 'spawn / work', kind: 'run' },
+        { lane: 't1', start: 3, end: 5, label: 'holds lock', kind: 'lock' },
+        { lane: 't1', start: 5, end: 8, label: 'work', kind: 'run' },
+        { lane: 't2', start: 0, end: 3, label: 'spawn / work', kind: 'run' },
+        { lane: 't2', start: 3, end: 5, label: 'waits for lock', kind: 'wait' },
+        { lane: 't2', start: 5, end: 7, label: 'holds lock', kind: 'lock' },
+        { lane: 't2', start: 7, end: 10, label: 'join', kind: 'run' },
+      ],
+    },
+  },
+  steps: [
+    {
+      label: 'Spawn threads',
+      caption: {
+        beginner: 'The program starts two workers that run at the same time.',
+        intermediate: 'Threads are created inside one process; the OS scheduler runs them on cores or interleaves them on one core.',
+        expert: 'Threads share one address space, so creation is cheaper than processes but they share heap, file descriptors and mutable state. In CPython the GIL lets only one thread run Python bytecode at a time, so threads help I/O-bound work, not CPU-bound work.',
+      },
+      state: { now: 1, changed: 'Both threads start running.' },
+      hood: 'CPython GIL: threads suit I/O-bound work; use multiprocessing for CPU-bound work.',
+    },
+    {
+      label: 'Share memory',
+      caption: {
+        beginner: 'Both workers touch the same notebook. If they write at once, entries can get mixed up.',
+        intermediate: 'Shared variables are visible to every thread. An update like counter += 1 is read, add, write, so two threads can overwrite each other (a race condition).',
+        expert: 'Races come from non-atomic read-modify-write sequences and lack of memory ordering guarantees. Even with a GIL, thread switches between bytecodes allow lost updates.',
+      },
+      state: { now: 3, changed: 'Both threads reach the shared data.' },
+      hood: 'counter += 1 compiles to load, add, store; a switch between them loses an update.',
+    },
+    {
+      label: 'Lock critical section',
+      caption: {
+        beginner: 'Only one worker may use the notebook at a time. The other waits for its turn.',
+        intermediate: 'A lock (mutex) makes the critical section mutually exclusive. The second thread blocks until the first releases it, so updates stay correct.',
+        expert: 'Keep critical sections short, acquire locks in a consistent global order to avoid deadlock, and prefer message passing, immutable data or atomic primitives over shared mutable state.',
+      },
+      state: { now: 4, changed: 'Thread B waits while A holds the lock.' },
+      hood: 'Consistent lock ordering prevents deadlock; with-statement ensures release.',
+    },
+    {
+      label: 'Join',
+      caption: {
+        beginner: 'The main program waits until both workers finish, then uses the final result.',
+        intermediate: 'join() blocks until a thread ends, which gives a safe point to read results and clean up.',
+        expert: 'Prefer thread pools and futures over manual threads; they bound concurrency, propagate exceptions and simplify shutdown. Unjoined or daemon threads can be killed mid-update at exit.',
+      },
+      state: { now: 9, changed: 'Both threads are done; the result is correct.' },
+      hood: 'ThreadPoolExecutor and futures manage lifecycle and error propagation.',
+    },
+  ],
+  levels: {
+    beginner: {
+      analogy: 'Two cooks sharing one kitchen and one recipe book. If both scribble in the book at once it becomes unreadable. A rule that only one cook holds the pen at a time keeps the book correct, though the other cook sometimes waits.',
+      explanation: 'Concurrency means several tasks make progress during the same period. Threads let a program do this, but when they share data they can corrupt it. Locks protect shared data by letting only one thread in at a time.',
+      keyTerms: [
+        { term: 'Thread', meaning: 'A path of execution inside a program.' },
+        { term: 'Race condition', meaning: 'A bug where the result depends on timing.' },
+        { term: 'Lock (mutex)', meaning: 'A gate letting one thread at a time into a section.' },
+        { term: 'Deadlock', meaning: 'Threads waiting on each other forever.' },
+        { term: 'Critical section', meaning: 'Code that touches shared data and must not run in parallel.' },
+      ],
+    },
+    intermediate: {
+      explanation: 'Threads share memory, so correctness depends on synchronization. Use locks or atomic operations for shared mutable state, thread-safe queues for handing work between threads, and pools to bound concurrency. Concurrency (interleaving) differs from parallelism (truly simultaneous on multiple cores).',
+      howItWorks: [
+        'The OS scheduler runs threads and can pause them between any two instructions.',
+        'Unsynchronized read-modify-write on shared data loses updates.',
+        'A lock lets only one thread run the critical section; others block.',
+        'Always release locks (with statement) even on errors.',
+        'Taking multiple locks in different orders can deadlock.',
+        'Thread pools and queues limit and organize concurrent work.',
+      ],
+      tradeoffs: {
+        use: [
+          'Use threads for I/O-bound work such as calling APIs or databases in parallel.',
+          'Use thread-safe queues to pass work instead of sharing mutable state.',
+          'Use thread pools to cap resource use.',
+        ],
+        avoid: [
+          'Avoid threads for CPU-bound Python code because of the GIL; use processes.',
+          'Avoid holding locks during slow I/O.',
+          'Avoid shared mutable state when immutable data or messages would do.',
+        ],
+      },
+      pitfalls: [
+        'Assuming counter += 1 is atomic.',
+        'Lock ordering inconsistencies causing deadlock.',
+        'Holding a lock while calling unknown code.',
+        'Forgetting to release a lock on an exception path.',
+        'Races that only appear under load and vanish when debugging.',
+      ],
+    },
+    expert: {
+      internals: [
+        'A mutex is usually built on atomic compare-and-swap plus an OS futex; contended locks sleep the thread, which costs context switches.',
+        'Memory models (Java JMM, C++11) define what one thread may observe of another\'s writes; without synchronization, reordering and caching can make updates invisible.',
+        'CPython releases the GIL during blocking I/O and in many C extensions, which is why threaded I/O works well; free-threaded builds are emerging. // VERIFY current status',
+        'Lock-free structures use CAS loops but suffer from ABA and contention problems and are hard to get right.',
+        'Deadlock needs four conditions (mutual exclusion, hold and wait, no preemption, circular wait); breaking any one prevents it.',
+      ],
+      failureModes: [
+        'Deadlock and livelock under rare interleavings.',
+        'Priority inversion where a low-priority thread holds a lock needed by a high-priority one.',
+        'Lock convoy and contention collapsing throughput as thread count rises.',
+        'Thread leaks or unbounded thread creation exhausting memory.',
+      ],
+      scalingNotes: [
+        'Throughput stops improving, and can fall, once threads exceed cores for CPU work or saturate the I/O resource.',
+        'Reduce lock scope, shard locks or use per-thread data to lower contention.',
+        'For large fan-out I/O, async event loops usually scale better than one thread per task.',
+      ],
+      realSystems: [
+        'Python: threading, concurrent.futures, multiprocessing; Java: ExecutorService, ConcurrentHashMap; Go goroutines with channels.',
+        'Gunicorn sync and gthread workers, uWSGI and Celery prefork pools.',
+        'Database row locks and OCC apply the same ideas across processes and machines.',
+      ],
+      numbersToKnow: [
+        'An OS thread typically reserves on the order of a megabyte of stack address space by default. // VERIFY platform dependent',
+        'An uncontended lock acquire is tens of nanoseconds; a contended one involving a context switch costs microseconds.',
+        'Optimal CPU-bound thread count is roughly the number of cores.',
+      ],
+    },
+  },
+  sim: 'thread-race',
+  worked: null,
+  code: [
+    {
+      lang: 'python',
+      title: 'Race condition fixed with a lock',
+      code: [
+        'import threading',
+        '',
+        'counter = 0',
+        'lock = threading.Lock()',
+        '',
+        'def work():',
+        '    global counter',
+        '    for _ in range(100_000):',
+        '        with lock:',
+        '            counter += 1',
+        '',
+        'threads = [threading.Thread(target=work) for _ in range(4)]',
+        'for t in threads: t.start()',
+        'for t in threads: t.join()',
+        'print(counter)',
+      ].join('\n'),
+      annotations: [
+        { line: 9, text: 'The with statement acquires the lock and always releases it.' },
+        { line: 10, text: 'The read-add-write is now one protected unit, so no updates are lost.' },
+        { line: 14, text: 'join waits for all threads before reading the result.' },
+      ],
+    },
+  ],
+  interview: [
+    { level: 'beginner', q: 'What is a race condition?', answer: 'A bug where the outcome depends on the timing of threads, such as two threads updating the same variable and one update being lost.', followUps: ['How do you prevent it?'] },
+    { level: 'beginner', q: 'What is the difference between a thread and a process?', answer: 'Threads share memory inside one process and are lighter; processes have separate memory, which isolates them but makes sharing harder.', followUps: ['When would you pick processes?'] },
+    { level: 'intermediate', q: 'How can deadlock happen and how do you avoid it?', answer: 'Two threads each hold a lock the other needs. Avoid it by acquiring locks in one global order, holding few locks, using timeouts, or avoiding shared locks through message passing.', followUps: ['How do you detect it in production?'] },
+    { level: 'intermediate', q: 'Why do Python threads not speed up CPU-bound code?', answer: 'The GIL lets one thread execute Python bytecode at a time. Use multiprocessing, native extensions that release the GIL, or async for I/O.', followUps: ['Why do they still help with I/O?'] },
+    { level: 'expert', q: 'Throughput drops when you add more threads. Why?', answer: 'Lock contention, context switching, cache-line bouncing, or saturating a shared resource like a connection pool. Profile lock wait time, reduce critical section size, shard state and cap the pool at what the bottleneck supports.', followUps: ['How would you measure contention?'] },
+    { level: 'expert', q: 'Locks, atomics or message passing: how do you choose?', answer: 'Prefer ownership and message passing so state has one writer. Use locks for small compound invariants, atomics for simple counters or flags. Lock-free code is rarely worth the risk outside hot library paths.', followUps: ['What is the ABA problem?'] },
+  ],
+  quiz: [
+    { level: 'beginner', q: 'What does a lock do?', options: ['Speeds up threads', 'Lets one thread at a time enter a section', 'Deletes shared data', 'Starts a new process'], answerIndex: 1, why: 'Mutual exclusion keeps shared data consistent.' },
+    { level: 'beginner', q: 'What is a deadlock?', options: ['A crashed disk', 'Threads waiting on each other forever', 'A slow query', 'A full queue'], answerIndex: 1, why: 'Circular waiting means no thread can proceed.' },
+    { level: 'intermediate', q: 'Which workload benefits most from Python threads?', options: ['CPU-heavy math', 'Many parallel network calls', 'Image compression in pure Python', 'Matrix loops'], answerIndex: 1, why: 'Threads release the GIL while waiting on I/O.' },
+    { level: 'expert', q: 'Which approach prevents deadlock?', options: ['Take locks in a consistent global order', 'Add more threads', 'Hold locks longer', 'Use random lock order'], answerIndex: 0, why: 'A fixed order breaks the circular wait condition.' },
+  ],
+});
