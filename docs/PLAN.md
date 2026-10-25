@@ -248,3 +248,5 @@ Build order after approval, for your review: Phase 1 shell and engine, then Phas
 - 8 new sims (alias-copy, big-o, polymorphism, observer, rest-request, jwt-verify, session-vs-token, authn-authz): 8/12 topics (67%) have a sim.
 - Inline worked examples: programming-language-fundamentals, api-design-versioning.
 - Remaining batches: Data; Performance+Concurrency; Architecture; Resilience+Distributed; Infra/Networking/Observability/Security/Testing.
+- Batch 2 done: Data (8 topics; indexing was an earlier sample) -> 21 written. 3 new sims (db-locking, occ-conflict, nosql-partition); 5/8 topics have a sim, 1 inline worked example (normalization), 2 ported ones (acid, occ).
+- Remaining: Performance+Concurrency; Architecture; Resilience+Distributed; Infra/Networking/Observability/Security/Testing.
