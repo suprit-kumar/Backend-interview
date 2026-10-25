@@ -1,0 +1,186 @@
+/* Architecture: rate-limiting */
+Atlas.topics.push({
+  id: 'rate-limiting',
+  category: 'architecture',
+  title: 'Rate Limiting',
+  source: {
+    description: 'Cap requests per client to protect the service.',
+    steps: ['Request', 'Check bucket', 'Allowed: spend token', 'Empty: 429'],
+  },
+  estMinutes: 12,
+  prereqs: [],
+  related: ['api-gateway', 'load-balancing', 'redis', 'retry-strategies-exponential-backoff'],
+  tags: ['token bucket', 'leaky bucket', '429', 'sliding window', 'throttling', 'quota'],
+  visual: {
+    type: 'chart',
+    config: {
+      kind: 'line',
+      xLabel: 'Time (s)',
+      yLabel: 'Tokens in bucket',
+      unit: '',
+      x: ['0', '1', '2', '3', '4', '5'],
+      yMax: 10,
+      series: [{ id: 'tokens', label: 'Tokens', tone: 'accent', values: [10, 10, 10, 10, 10, 10] }],
+    },
+  },
+  steps: [
+    {
+      label: 'Request',
+      caption: {
+        beginner: 'A client sends a request. The bucket is full of tokens.',
+        intermediate: 'Each client (key, user or IP) has a bucket holding up to a burst capacity of tokens.',
+        expert: 'Pick the limiting key carefully (API key, user, IP, tenant). IP-only limits hurt users behind shared NATs and are easy to evade.',
+      },
+      state: { series: { tokens: [10, 10, 10, 10, 10, 10] }, mark: 0, changed: 'The bucket starts full.' },
+      hood: 'Limit by authenticated identity first; fall back to IP for anonymous traffic.',
+    },
+    {
+      label: 'Check bucket',
+      caption: {
+        beginner: 'The server looks at how many tokens are left.',
+        intermediate: 'Tokens refill at a steady rate up to the capacity. The limiter checks whether at least one token is available.',
+        expert: 'Compute refill lazily from the last timestamp instead of running a timer. In a cluster the check-and-decrement must be atomic, for example a Redis Lua script.',
+      },
+      state: { series: { tokens: [10, 8, 6, 4, 2, 0] }, mark: 1, changed: 'A burst drains the bucket.' },
+      hood: 'Atomic check-and-decrement: Redis Lua script or INCR with EXPIRE.',
+    },
+    {
+      label: 'Allowed: spend token',
+      caption: {
+        beginner: 'There is a token, so the request goes through and one token is used up.',
+        intermediate: 'Allowed requests consume a token and proceed. Bursts up to capacity are fine, but the long-run rate is capped by the refill rate.',
+        expert: 'Return RateLimit-Remaining and RateLimit-Reset style headers so well-behaved clients can pace themselves.',
+      },
+      state: { series: { tokens: [10, 9, 8, 7, 6, 5] }, mark: 2, changed: 'Tokens are spent per request.' },
+      hood: 'Expose remaining quota via headers (RateLimit-* draft or X-RateLimit-*).',
+    },
+    {
+      label: 'Empty: 429',
+      caption: {
+        beginner: 'No tokens left, so the server says "slow down" and rejects the request.',
+        intermediate: 'When empty, the server returns 429 Too Many Requests with a Retry-After header. Tokens refill over time.',
+        expert: 'Clients must back off with jitter. Decide fail-open or fail-closed when the limiter store is down, and use cheap local limits as a backstop to protect the store itself.',
+      },
+      state: { series: { tokens: [0, 0, 1, 2, 3, 4] }, mark: 3, changed: 'Rejections until tokens refill.' },
+      hood: 'Return 429 with Retry-After; clients use backoff with jitter.',
+    },
+  ],
+  levels: {
+    beginner: {
+      analogy: 'A cinema selling tickets from a roll. A new ticket is added every few seconds. You can buy several if the roll is full, but if it is empty you wait for the next ticket. Nobody can hog the whole roll for long.',
+      explanation: 'Rate limiting caps how many requests a client can make in a period. It protects the service from overload, abuse and runaway scripts, and shares capacity fairly.',
+      keyTerms: [
+        { term: 'Rate limit', meaning: 'The maximum requests allowed in a time period.' },
+        { term: 'Token bucket', meaning: 'A refilling bucket; each request spends a token.' },
+        { term: 'Burst', meaning: 'A short spike allowed up to the bucket size.' },
+        { term: '429', meaning: 'The HTTP status "Too Many Requests".' },
+        { term: 'Retry-After', meaning: 'A header telling the client when to try again.' },
+      ],
+    },
+    intermediate: {
+      explanation: 'Common algorithms: fixed window (simple, has boundary bursts), sliding window (smoother), token bucket (allows bursts) and leaky bucket (smooths output). Apply limits per user, key or IP, and per endpoint cost.',
+      howItWorks: [
+        'Identify the client key.',
+        'Load its bucket or counter.',
+        'Refill tokens based on elapsed time.',
+        'If a token is available, spend it and allow the request.',
+        'Otherwise respond 429 with Retry-After.',
+        'Clients back off and retry later.',
+      ],
+      tradeoffs: {
+        use: [
+          'Use to protect services from abuse, bugs and overload.',
+          'Use tiered quotas for plans (free versus paid).',
+          'Use stricter limits on expensive or sensitive endpoints such as login.',
+        ],
+        avoid: [
+          'Avoid IP-only limits where many users share an address.',
+          'Avoid fixed windows when boundary double-bursts matter.',
+          'Avoid limiting without telling clients how to back off.',
+        ],
+      },
+      pitfalls: [
+        'Fixed window allowing double the rate around the window edge.',
+        'Non-atomic read-then-write counters under concurrency.',
+        'Limiter store outage taking down the API (or letting everything through).',
+        'Counting retries as new requests, making overload worse.',
+        'Clock skew between nodes with local timestamps.',
+      ],
+    },
+    expert: {
+      internals: [
+        'Token bucket stores tokens and last-refill time; refill = elapsed x rate capped at capacity. State per key is tiny.',
+        'Sliding window log is exact but memory heavy; sliding window counter approximates by weighting two adjacent fixed windows.',
+        'Distributed enforcement uses Redis with Lua for atomicity; alternatives are local limits with periodic sync, accepting some over-admission.',
+        'GCRA (generic cell rate algorithm) is an equivalent, compact formulation using one timestamp per key.',
+      ],
+      failureModes: [
+        'Redis latency or outage on the hot path; decide fail-open or fail-closed explicitly.',
+        'Hot keys concentrating on one Redis shard.',
+        'Synchronized retries after a reset causing a spike (thundering herd).',
+        'Distributed attackers evading per-IP limits.',
+      ],
+      scalingNotes: [
+        'Enforce coarse limits at the CDN or gateway and fine-grained ones in services.',
+        'Shard counters by key; use local token pre-fetching to cut round trips.',
+        'Add concurrency limits and load shedding alongside rate limits.',
+      ],
+      realSystems: [
+        'NGINX limit_req, Envoy rate limit service, Kong, AWS API Gateway usage plans, Cloudflare rate limiting.',
+        'Redis-based libraries such as slowapi, django-ratelimit and redis-cell.',
+        'Stripe and GitHub publish rate-limit behavior with headers.',
+      ],
+      numbersToKnow: [
+        'A Redis Lua check typically costs a network round trip, around a millisecond in-datacenter. // VERIFY',
+        'GitHub REST API authenticated limit is 5,000 requests per hour per user. // VERIFY',
+        'State per key is a few bytes for token bucket or GCRA.',
+      ],
+    },
+  },
+  sim: 'rate-limiter',
+  worked: null,
+  code: [
+    {
+      lang: 'python',
+      title: 'Atomic token bucket in Redis (Lua)',
+      code: [
+        'import time, redis',
+        '',
+        'r = redis.Redis()',
+        'LUA = """',
+        'local t = redis.call("HMGET", KEYS[1], "tokens", "ts")',
+        'local tokens = tonumber(t[1]) or tonumber(ARGV[1])',
+        'local ts = tonumber(t[2]) or tonumber(ARGV[3])',
+        'tokens = math.min(ARGV[1], tokens + (ARGV[3] - ts) * ARGV[2])',
+        'local ok = tokens >= 1',
+        'if ok then tokens = tokens - 1 end',
+        'redis.call("HSET", KEYS[1], "tokens", tokens, "ts", ARGV[3])',
+        'redis.call("EXPIRE", KEYS[1], 120)',
+        'return ok and 1 or 0',
+        '"""',
+        'allow = r.register_script(LUA)',
+        'ok = allow(keys=["rl:user:7"], args=[10, 1, time.time()])',
+      ].join('\n'),
+      annotations: [
+        { line: 5, text: 'Read tokens and last timestamp in the same script so no other request interleaves.' },
+        { line: 8, text: 'Lazy refill: add elapsed time x rate, capped at capacity.' },
+        { line: 12, text: 'EXPIRE removes idle buckets so memory stays bounded.' },
+        { line: 16, text: 'Args: capacity 10, refill 1 token per second, current time.' },
+      ],
+    },
+  ],
+  interview: [
+    { level: 'beginner', q: 'Why rate limit an API?', answer: 'To protect it from overload and abuse, keep service fair across clients and control costs.', followUps: ['What status code do you return?'] },
+    { level: 'beginner', q: 'How does a token bucket work?', answer: 'Tokens refill at a fixed rate up to a maximum. Each request spends one; with none left the request is rejected until more arrive. It allows short bursts but caps the average rate.', followUps: ['What controls burst size?'] },
+    { level: 'intermediate', q: 'Fixed window vs sliding window?', answer: 'Fixed windows are simple but allow up to double the limit across a boundary. Sliding windows count over the trailing period, so they are smoother but cost more state or approximation.', followUps: ['Which uses less memory?'] },
+    { level: 'intermediate', q: 'How do you rate limit across many app servers?', answer: 'Keep shared counters in Redis with atomic operations, or enforce at a central gateway. Local-only limits allow N times the rate.', followUps: ['What if Redis is down?'] },
+    { level: 'expert', q: 'Fail-open or fail-closed when the limiter store is down?', answer: 'Depends on risk. Fail-open protects availability but exposes backends; fail-closed protects backends but rejects users. A common choice is fail-open with local coarse limits as a backstop, and stricter closed behavior for sensitive endpoints like login.', followUps: ['How do you protect Redis itself?'] },
+    { level: 'expert', q: 'How do you stop distributed abuse that evades per-IP limits?', answer: 'Layer limits by identity, API key, tenant and behavior, add bot detection and WAF rules at the CDN, use proof-of-work or CAPTCHA on risky flows, and cap global concurrency so overall load stays bounded.', followUps: ['What are false positive risks?'] },
+  ],
+  quiz: [
+    { level: 'beginner', q: 'Which status signals a rate limit hit?', options: ['429', '404', '200', '301'], answerIndex: 0, why: '429 means Too Many Requests.' },
+    { level: 'beginner', q: 'A token bucket allows...', options: ['Short bursts up to capacity', 'No bursts ever', 'Unlimited rate', 'Only one request'], answerIndex: 0, why: 'Stored tokens allow bursts.' },
+    { level: 'intermediate', q: 'Why use a Lua script in Redis for limiting?', options: ['Atomic check and update', 'To compress data', 'To encrypt', 'To log'], answerIndex: 0, why: 'Prevents race conditions between servers.' },
+    { level: 'expert', q: 'Weakness of fixed windows?', options: ['Double burst at the boundary', 'Needs GPUs', 'Cannot count', 'Requires TLS'], answerIndex: 0, why: 'Requests at the end and start of adjacent windows add up.' },
+  ],
+});
