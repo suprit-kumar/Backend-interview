@@ -252,3 +252,5 @@ Build order after approval, for your review: Phase 1 shell and engine, then Phas
 - Batch 3 done: Performance & Caching + Concurrency & Messaging (10 topics) -> 31 written. 4 new sims (conn-pool, thread-race, async-timeline, queue-backlog); 7/10 topics have a sim (incl. lru-cache, kafka-partitions). Verify 19/19.
 - Remaining: Performance+Concurrency; Architecture; Resilience+Distributed; Infra/Networking/Observability/Security/Testing.
 - Batch 4 done: Architecture (9 topics, one file each) -> 40 written. Sims: load-balancer, rate-limiter (2/9, below the 60% target); worked examples for rate-limiting, idempotency, pagination come from worked.js. Verify 19/19.
+
+Batch 5 done (Resilience): 46/77 topics written.
