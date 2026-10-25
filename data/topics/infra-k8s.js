@@ -1,0 +1,192 @@
+/* Infrastructure: Kubernetes Basics. */
+Atlas.topics.push({
+  id: 'kubernetes-basics',
+  category: 'infrastructure',
+  title: 'Kubernetes Basics',
+  source: {
+    description: 'Schedules containers across machines and keeps them healthy.',
+    steps: ['Declare desired state', 'Scheduler places pods', 'Controller heals', 'Service routes traffic'],
+  },
+  estMinutes: 13,
+  prereqs: ['docker'],
+  related: ['docker', 'health-checks', 'scalability', 'high-availability'],
+  tags: ['pod', 'deployment', 'service', 'scheduler', 'controller', 'kubectl', 'etcd'],
+  visual: {
+    type: 'topology',
+    config: {
+      nodes: [
+        { id: 'user', label: 'kubectl', kind: 'client', x: 8, y: 50 },
+        { id: 'api', label: 'API server', kind: 'service', x: 35, y: 50 },
+        { id: 'n1', label: 'Node 1', kind: 'service', x: 72, y: 20 },
+        { id: 'n2', label: 'Node 2', kind: 'service', x: 72, y: 80 },
+        { id: 'svc', label: 'Service', kind: 'lb', x: 92, y: 50 },
+      ],
+      edges: [{ from: 'user', to: 'api' }, { from: 'api', to: 'n1' }, { from: 'api', to: 'n2' }, { from: 'n1', to: 'svc' }, { from: 'n2', to: 'svc' }],
+    },
+  },
+  steps: [
+    {
+      label: 'Declare desired state',
+      caption: {
+        beginner: 'You tell Kubernetes what you want: "run 3 copies of my app".',
+        intermediate: 'You submit YAML (a Deployment) to the API server, which stores the desired state in etcd.',
+        expert: 'Kubernetes is declarative and level-triggered: controllers continuously reconcile actual state toward the stored spec.',
+      },
+      state: { packets: [{ from: 'user', to: 'api', tone: 'ok', label: 'apply' }], active: ['api'], changed: 'Desired state stored.' },
+      hood: 'API server is the only component writing to etcd.',
+    },
+    {
+      label: 'Scheduler places pods',
+      caption: {
+        beginner: 'It picks which machines will run each copy.',
+        intermediate: 'The scheduler assigns each unscheduled pod to a node based on resource requests, affinity, taints and tolerations.',
+        expert: 'Scheduling filters nodes, then scores them. The kubelet on the chosen node pulls images and starts containers via the container runtime.',
+      },
+      state: { packets: [{ from: 'api', to: 'n1', tone: 'ok', label: 'pod' }, { from: 'api', to: 'n2', tone: 'ok', label: 'pod' }], active: ['n1', 'n2'], changed: 'Pods placed on nodes.' },
+      hood: 'Filter then score; requests drive placement, not limits.',
+    },
+    {
+      label: 'Controller heals',
+      caption: {
+        beginner: 'If a copy dies, Kubernetes starts a new one automatically.',
+        intermediate: 'The ReplicaSet controller notices fewer pods than desired and creates replacements, even rescheduling if a node fails.',
+        expert: 'Node failure is detected via missed heartbeats (node lease) and pods are evicted after a toleration timeout, so recovery takes minutes by default. // VERIFY',
+      },
+      state: { failed: ['n2'], packets: [{ from: 'api', to: 'n1', tone: 'ok', label: 'new pod' }], badges: { n2: 'down' }, changed: 'Replacement pod started.' },
+      hood: 'Reconcile loop: observe, diff, act.',
+    },
+    {
+      label: 'Service routes traffic',
+      caption: {
+        beginner: 'One stable address sends visitors to whichever copies are healthy.',
+        intermediate: 'A Service gives pods a stable virtual IP and DNS name and load balances across ready pods.',
+        expert: 'kube-proxy (iptables/IPVS) or eBPF dataplanes implement Services. Only pods passing readiness are in the endpoints.',
+      },
+      state: { failed: ['n2'], packets: [{ from: 'n1', to: 'svc', tone: 'ok', label: 'ready pods' }], active: ['svc'], changed: 'Traffic reaches healthy pods only.' },
+      hood: 'Endpoints include only Ready pods.',
+    },
+  ],
+  levels: {
+    beginner: {
+      analogy: 'A restaurant manager. You say "I always want three chefs on shift". The manager assigns chefs to kitchens, replaces anyone who goes home sick and sends customers to whichever kitchens are open.',
+      explanation: 'Kubernetes runs your containers across many machines. You describe how many copies you want, and it places them, replaces failed ones and shares traffic between them.',
+      keyTerms: [
+        { term: 'Pod', meaning: 'The smallest unit: one or more containers.' },
+        { term: 'Deployment', meaning: 'Keeps N copies of a pod running.' },
+        { term: 'Service', meaning: 'A stable address for a set of pods.' },
+        { term: 'Node', meaning: 'A machine that runs pods.' },
+        { term: 'Desired state', meaning: 'What you declared you want.' },
+      ],
+    },
+    intermediate: {
+      explanation: 'Use Deployments for stateless apps, Services for networking, ConfigMaps and Secrets for configuration, probes for health and requests/limits for resources. Everything is reconciled continuously from declared YAML.',
+      howItWorks: [
+        'kubectl applies a manifest to the API server.',
+        'etcd stores the object.',
+        'Controllers create ReplicaSets and Pods.',
+        'The scheduler assigns pods to nodes.',
+        'kubelet runs containers and reports status.',
+        'Services route traffic to ready pods.',
+      ],
+      tradeoffs: {
+        use: [
+          'Use for many services needing self-healing, rolling updates and scaling.',
+          'Use managed Kubernetes (EKS, GKE, AKS) to avoid running the control plane.',
+          'Use HPA for automatic scaling.',
+        ],
+        avoid: [
+          'Avoid it for a single small app where a PaaS or simple VM is enough.',
+          'Avoid running databases on it without operational experience.',
+          'Avoid skipping resource requests and probes.',
+        ],
+      },
+      pitfalls: [
+        'No resource requests, so scheduling and autoscaling misbehave.',
+        'Missing readiness probes sending traffic to starting pods.',
+        'Using latest tags and mutable images.',
+        'Secrets in plain ConfigMaps.',
+        'CrashLoopBackOff from bad config left undiagnosed.',
+      ],
+    },
+    expert: {
+      internals: [
+        'Control plane: kube-apiserver, etcd (Raft-backed store), kube-scheduler, controller-manager; nodes run kubelet, container runtime and kube-proxy.',
+        'Controllers use informers (list-watch with caches) and work queues, with optimistic concurrency via resourceVersion.',
+        'Rolling updates create a new ReplicaSet and shift replicas using maxSurge and maxUnavailable.',
+        'Operators extend the API with CRDs and custom controllers.',
+      ],
+      failureModes: [
+        'etcd latency or loss freezing the cluster state.',
+        'Node pressure evictions and OOM kills.',
+        'Misconfigured limits causing CPU throttling.',
+        'DNS (CoreDNS) overload and conntrack exhaustion.',
+      ],
+      scalingNotes: [
+        'Keep etcd on fast disks; clusters have documented size limits (nodes, pods).',
+        'Use PodDisruptionBudgets and topology spread constraints for availability.',
+        'Use cluster autoscaler or Karpenter plus HPA/VPA/KEDA.',
+      ],
+      realSystems: [
+        'EKS, GKE, AKS; k3s and kind for dev; Helm and Kustomize; Argo CD and Flux for GitOps.',
+        'Istio and Linkerd service meshes; Cilium eBPF networking.',
+        'Prometheus Operator for monitoring.',
+      ],
+      numbersToKnow: [
+        'Upstream guidance supports clusters up to about 5000 nodes and 150000 pods. // VERIFY',
+        'Default pod eviction toleration is 300 seconds for unreachable nodes. // VERIFY',
+        'Default probe period is 10 seconds.',
+      ],
+    },
+  },
+  sim: null,
+  worked: null,
+  code: [
+    {
+      lang: 'yaml',
+      title: 'Deployment and Service',
+      code: [
+        'apiVersion: apps/v1',
+        'kind: Deployment',
+        'metadata: { name: api }',
+        'spec:',
+        '  replicas: 3',
+        '  selector: { matchLabels: { app: api } }',
+        '  template:',
+        '    metadata: { labels: { app: api } }',
+        '    spec:',
+        '      containers:',
+        '        - name: api',
+        '          image: registry.example/api:1.4.2',
+        '          resources: { requests: { cpu: 250m, memory: 256Mi }, limits: { memory: 512Mi } }',
+        '          readinessProbe: { httpGet: { path: /readyz, port: 8000 } }',
+        '---',
+        'apiVersion: v1',
+        'kind: Service',
+        'metadata: { name: api }',
+        'spec:',
+        '  selector: { app: api }',
+        '  ports: [{ port: 80, targetPort: 8000 }]',
+      ].join('\n'),
+      annotations: [
+        { line: 5, text: 'Desired state: three pods at all times.' },
+        { line: 12, text: 'Pin an explicit image version.' },
+        { line: 13, text: 'Requests drive scheduling; the memory limit caps usage.' },
+        { line: 20, text: 'The Service selects pods by label and balances across Ready ones.' },
+      ],
+    },
+  ],
+  interview: [
+    { level: 'beginner', q: 'What is a pod?', answer: 'The smallest deployable unit in Kubernetes, holding one or more tightly coupled containers that share network and storage.', followUps: ['Why not run containers directly?'] },
+    { level: 'beginner', q: 'What does a Deployment do?', answer: 'It keeps a desired number of identical pods running and handles rolling updates and replacement of failed pods.', followUps: ['What is a ReplicaSet?'] },
+    { level: 'intermediate', q: 'How does a rolling update work?', answer: 'A new ReplicaSet scales up gradually while the old one scales down, controlled by maxSurge and maxUnavailable, with readiness probes gating progress. You can roll back to the previous ReplicaSet.', followUps: ['What if readiness never passes?'] },
+    { level: 'intermediate', q: 'Requests vs limits?', answer: 'Requests are what the scheduler reserves for placement; limits are the maximum allowed. Exceeding the memory limit kills the container; exceeding CPU limit throttles it.', followUps: ['What QoS classes exist?'] },
+    { level: 'expert', q: 'A pod is stuck Pending. How do you debug?', answer: 'Run kubectl describe pod and check events: insufficient CPU or memory, unsatisfied node selectors, taints, unbound PersistentVolumeClaims or quota limits. Then check node capacity and the scheduler logs.', followUps: ['What about ImagePullBackOff?'] },
+    { level: 'expert', q: 'How do you keep a service available during node drains?', answer: 'Run multiple replicas spread across nodes and zones, set a PodDisruptionBudget, use readiness probes and graceful termination (preStop, grace period), and ensure capacity for rescheduling.', followUps: ['What does a PDB not protect?'] },
+  ],
+  quiz: [
+    { level: 'beginner', q: 'Kubernetes works from...', options: ['Desired state', 'Manual restarts', 'SSH scripts only', 'Cron only'], answerIndex: 0, why: 'Controllers reconcile to the declared spec.' },
+    { level: 'beginner', q: 'A Service provides...', options: ['A stable address for pods', 'A new CPU', 'A database', 'A Git repo'], answerIndex: 0, why: 'Pods are ephemeral.' },
+    { level: 'intermediate', q: 'The scheduler uses...', options: ['Resource requests', 'Only limits', 'Pod names', 'Image size only'], answerIndex: 0, why: 'Requests drive placement.' },
+    { level: 'expert', q: 'Cluster state lives in...', options: ['etcd', 'kubelet cache', 'Docker Hub', 'CoreDNS'], answerIndex: 0, why: 'The API server persists objects in etcd.' },
+  ],
+});
