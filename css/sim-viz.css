@@ -1,0 +1,25 @@
+/* Simulation visuals (Atlas.simviz). Colours come from theme variables so both themes work. */
+.sx-link { stroke: var(--border-strong); stroke-width: 2; transition: stroke .25s; }
+.sx-link.is-cut { stroke: var(--bad); stroke-dasharray: 6 5; }
+.sx-link.is-live { stroke: var(--accent); }
+.sx-link.is-off { opacity: .2; }
+.sx-cap { fill: var(--text-3); font-size: 11px; font-family: var(--font-mono, monospace); }
+.sx-lane { fill: var(--surface-2); stroke: var(--border); }
+.sx-lane-label { fill: var(--text-2); font-size: 12px; font-weight: 600; }
+.sx-cell { fill: var(--surface); stroke: var(--border-strong); }
+.sx-cell.is-on { fill: var(--primary-soft); stroke: var(--primary); }
+.sx-cell.tone-ok { fill: var(--ok-soft); stroke: var(--ok); }
+.sx-cell.tone-bad { fill: var(--bad-soft); stroke: var(--bad); }
+.sx-cell.tone-warn { fill: var(--warn-soft); stroke: var(--warn); }
+.sx-bucket { fill: none; stroke: var(--border-strong); stroke-width: 3; }
+.sx-water { fill: var(--accent); opacity: .55; transition: y .3s, height .3s; }
+.sx-bar { fill: var(--primary); opacity: .75; }
+.sx-bar.is-jitter { fill: var(--warn); opacity: .6; }
+.sx-bar.tone-bad { fill: var(--bad); }
+.sx-bar.tone-ok { fill: var(--ok); }
+.sx-dot { fill: var(--accent); }
+.sx-dot.is-busy { fill: var(--warn); }
+.sx-txt { fill: var(--text); font-size: 12px; }
+@media (prefers-reduced-motion: reduce) {
+  .sx-link, .sx-water { transition: none; }
+}

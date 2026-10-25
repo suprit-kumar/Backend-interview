@@ -1,0 +1,29 @@
+﻿/* Motion. Everything animated is also readable without motion (see the reduced-motion block). */
+@keyframes atlas-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes atlas-swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes atlas-pop { 0% { transform: scale(.96); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes atlas-glow { 0%, 100% { stroke-width: 2; } 50% { stroke-width: 4; } }
+@keyframes atlas-line { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@keyframes atlas-pulse { 0%, 100% { box-shadow: 0 0 0 0 var(--primary-soft); } 50% { box-shadow: 0 0 0 8px transparent; } }
+
+.view-enter { animation: atlas-rise .35s ease both; }
+.is-swapping { animation: atlas-swap .3s ease both; }
+.palette-dialog { animation: atlas-pop .16s ease both; }
+.term-line { animation: atlas-line .3s ease both; }
+.sv-node.is-active rect, .sv-node.is-active circle { animation: atlas-glow 1.8s ease-in-out infinite; }
+.is-new { animation: atlas-line .5s ease both; }
+
+.sidebar { transition: transform .25s ease; }
+.btn-atlas, .btn-ghost, .icon-btn, .cat-card, .topic-card, .side-link, .quiz-opt, .chip { transition: background-color .15s, border-color .15s, transform .15s, box-shadow .15s, color .15s; }
+.cat-card:hover, .topic-card:hover, .path-card:hover { transform: translateY(-2px); }
+.sv-node rect, .sv-node circle, .viz-edge, .wf-span, .ds-boxes li, .ds-log li, .ds-table tr { transition: fill .3s, stroke .3s, opacity .3s, background-color .3s; }
+.progress-ring .ring-fill, progress::-webkit-progress-value { transition: stroke-dasharray .5s ease, width .5s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important;
+    transition-duration: .001ms !important; scroll-behavior: auto !important;
+  }
+  .cat-card:hover, .topic-card:hover, .path-card:hover { transform: none; }
+}
+

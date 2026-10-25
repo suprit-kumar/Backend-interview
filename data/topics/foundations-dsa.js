@@ -1,0 +1,258 @@
+/* Foundations: Data Structures & Algorithms. */
+Atlas.topics.push({
+  id: 'data-structures-algorithms',
+  category: 'foundations',
+  title: 'Data Structures & Algorithms',
+  source: {
+    description: 'Pick the structure that makes your key operation cheap.',
+    steps: ['Define the problem', 'Choose a structure', 'Write the algorithm', 'Check Big-O'],
+  },
+  estMinutes: 16,
+  prereqs: ['programming-language-fundamentals'],
+  related: ['indexing', 'caching', 'redis', 'performance-optimization'],
+  tags: ['big-o', 'hash map', 'array', 'tree', 'heap', 'sorting', 'binary search', 'complexity', 'dict', 'set'],
+  visual: {
+    type: 'chart',
+    config: {
+      kind: 'line', xLabel: 'n (items)', yLabel: 'operations (relative)', unit: '', yMax: 700,
+      x: [10, 20, 40, 60, 80, 100],
+      series: [
+        { id: 'o1', label: 'O(1) hash lookup', tone: 'ok', values: [1, 1, 1, 1, 1, 1] },
+        { id: 'olog', label: 'O(log n) binary search', tone: 'accent', values: [3, 4, 5, 6, 6, 7] },
+        { id: 'on', label: 'O(n) linear scan', tone: 'warn', values: [10, 20, 40, 60, 80, 100] },
+        { id: 'onlog', label: 'O(n log n) sort', tone: 'bad', values: [33, 86, 213, 354, 505, 664] },
+      ],
+    },
+  },
+  steps: [
+    {
+      label: 'Define the problem',
+      caption: {
+        beginner: 'First decide what you need to do most: find one item, keep things in order, or add and remove quickly? The answer picks the tool.',
+        intermediate: 'List the operations and their frequency: lookup by key, range query, insert, delete, ordered iteration. Also note the expected size n and memory limits.',
+        expert: 'Frame it with access patterns and invariants: read/write ratio, key distribution, ordering needs, concurrency, and whether data fits in memory. These decide between hash, tree, heap, or an on-disk index.',
+      },
+      state: { series: { o1: [1, 1, 1, 1, 1, 1], olog: [3, 4, 5, 6, 6, 7], on: [10, 20, 40, 60, 80, 100], onlog: [33, 86, 213, 354, 505, 664] }, hide: ['o1', 'olog', 'onlog'] },
+      hood: 'Only the baseline (a linear scan) is shown: it is what you get if you do not think about the structure.',
+    },
+    {
+      label: 'Choose a structure',
+      caption: {
+        beginner: 'A phone book sorted by name lets you jump to a person. A hash map is like a coat check: show the ticket, get the coat straight away.',
+        intermediate: 'Hash map (dict, set): average O(1) lookup, no order. Sorted array or balanced tree: O(log n) lookup and ordered ranges. List scan: O(n). A heap gives the smallest item in O(1) and removal in O(log n).',
+        expert: 'Hash lookups are O(1) on average but O(n) in degenerate collision cases, and resizing causes occasional spikes. Trees and B-trees cost more per lookup but give ordering and predictable worst case, which is why database indexes use B-trees.',
+      },
+      state: { hide: ['onlog'], mark: 3 },
+      hood: 'Marker at n = 60: roughly 1 step (hash), about 6 steps (binary search) versus 60 (scan).',
+    },
+    {
+      label: 'Write the algorithm',
+      caption: {
+        beginner: 'Now write the steps. Binary search keeps halving the search area, like guessing a number between 1 and 100 and being told higher or lower.',
+        intermediate: 'Pair the structure with a standard algorithm: binary search on sorted data, sort once then scan, two pointers, or a heap for top-k. Sorting costs O(n log n) up front, which pays off only if you search many times.',
+        expert: 'Think amortised cost and constants. Python\'s sort (Timsort) is O(n log n) worst case and O(n) on nearly sorted data; dict operations are fast in practice because of cache-friendly open addressing. An O(n log n) pass can beat O(n^2) at n = 1000, yet lose to a simple scan at n = 10.',
+      },
+      state: { hide: [], mark: 4 },
+      hood: 'All four curves visible: sorting up front (red) is the expensive part of "sort then binary search".',
+    },
+    {
+      label: 'Check Big-O',
+      caption: {
+        beginner: 'Big-O shows how the work grows when the data grows. A flat line is great, a steep line gets slow quickly as data gets bigger.',
+        intermediate: 'State time and space complexity and test with realistic n. Prefer the simpler option unless n is large; Big-O ignores constants, so measure before optimising.',
+        expert: 'Complexity is only a model. Cache misses, memory allocation, I/O and network dominate in real services. Profile first, then fix the dominant term: often an N+1 query or a missing index, not a data-structure choice.',
+      },
+      state: { hide: [], mark: 5 },
+      hood: 'At n = 100 the sort curve (about 664) is already roughly 100 times the hash lookup. Values are n, log2(n), n*log2(n) rounded.',
+    },
+  ],
+  levels: {
+    beginner: {
+      analogy: 'A library. If books are thrown in a pile, finding one means checking each (linear scan). If they are sorted on shelves by number, you jump close to the right shelf (binary search). If a catalogue tells you the exact shelf for each title, you walk straight there (hash lookup).',
+      explanation: 'A data structure is a way of storing data so that certain operations are fast. An algorithm is a step-by-step method for solving a problem with it. Choosing well means the same program can take milliseconds instead of minutes as data grows. Big-O is the shorthand that tells how the work grows with the amount of data.',
+      keyTerms: [
+        { term: 'Array / list', meaning: 'Items stored in order; quick to read by position, slow to search by value.' },
+        { term: 'Hash map (dict)', meaning: 'Stores key-value pairs and finds a key almost instantly.' },
+        { term: 'Tree', meaning: 'Items arranged in a branching hierarchy; good for ordered data.' },
+        { term: 'Heap', meaning: 'Keeps the smallest (or largest) item ready to take out.' },
+        { term: 'Big-O', meaning: 'A way to describe how the work grows as data grows.' },
+        { term: 'Binary search', meaning: 'Finding an item in sorted data by repeatedly halving the range.' },
+      ],
+    },
+    intermediate: {
+      explanation: 'Interview and real-world problems usually reduce to choosing between array/list, dict/set, stack/queue, heap and tree, then applying a standard technique. Know the cost of each operation and its trade-off in memory. In backends, the same ideas appear as database indexes, caches, queues and in-memory lookups.',
+      howItWorks: [
+        'List (dynamic array): O(1) append amortised, O(1) index, O(n) search or insert in the middle.',
+        'dict/set: average O(1) insert, lookup, delete using hashing; keys must be hashable; insertion order preserved in Python 3.7+.',
+        'collections.deque: O(1) at both ends, good for queues; list pop(0) is O(n).',
+        'heapq: a binary heap; push and pop are O(log n), peeking the smallest is O(1).',
+        'Sorted structure (bisect on a list, or a tree): O(log n) search, supports range queries and ordered iteration.',
+        'Sorting is O(n log n); sort once and reuse when you will search repeatedly.',
+      ],
+      tradeoffs: {
+        use: [
+          'Use a dict or set when you repeatedly check membership or look up by key.',
+          'Use a heap for top-k or priority scheduling instead of sorting everything.',
+          'Use a sorted structure or B-tree index when you need range queries or ordered output.',
+        ],
+        avoid: [
+          'Avoid list membership tests (x in big_list) inside loops; they are O(n) each and make the loop O(n^2).',
+          'Avoid premature optimisation on tiny n; a simple list can be faster and clearer.',
+          'Avoid hash maps when you need ordering or range scans, or when keys are not hashable or have poor hash distribution.',
+        ],
+      },
+      pitfalls: [
+        'Nested loops over two large collections (accidental O(n^2)).',
+        'Using list.pop(0) or insert(0, x) as a queue; use deque.',
+        'Mutating a collection while iterating over it.',
+        'Mutable objects as dict keys (lists are unhashable; mutating a key object breaks lookup).',
+        'Assuming O(1) means fast: a large constant or a cache miss can dominate.',
+      ],
+    },
+    expert: {
+      internals: [
+        'CPython dict uses an open-addressing hash table with a compact entries array; it resizes (and rehashes) when it gets about two-thirds full, giving amortised O(1) inserts with occasional O(n) resizes.',
+        'Python lists over-allocate when growing, which makes append amortised O(1) while insert at the front shifts all elements.',
+        'Timsort exploits existing runs, so nearly sorted input sorts in close to O(n).',
+        'Databases use B+ trees (wide, shallow, disk-page sized nodes) so that a lookup needs a few page reads even for billions of rows; LSM trees trade read cost for fast sequential writes.',
+        'Probabilistic structures (Bloom filter, HyperLogLog, count-min sketch) trade exactness for tiny memory and are used in caches, databases and analytics.',
+      ],
+      failureModes: [
+        'Hash flooding: attacker-chosen keys collide to degrade a hash table to O(n); mitigated by randomised hashing (Python randomises string hashes by default).',
+        'Memory blowup: millions of small Python objects cost far more than arrays or numpy buffers.',
+        'Latency spikes from resizing a huge hash table or sorting a large in-memory list on the request path.',
+        'Unbounded in-memory collections used as caches that never evict, leading to OOM.',
+      ],
+      scalingNotes: [
+        'When data no longer fits in memory the cost model changes: count disk or network accesses, not comparisons. This is why indexes, partitioning and caches exist.',
+        'Distributed variants: consistent hashing for sharding, Redis sorted sets for leaderboards, Kafka logs as append-only structures.',
+        'Prefer streaming and top-k (heap) over materialising and sorting full result sets.',
+      ],
+      realSystems: [
+        'PostgreSQL and MySQL InnoDB B+ tree indexes; Postgres also offers hash, GIN and BRIN.',
+        'Redis hashes, sets, sorted sets (skip list plus hash table) and streams.',
+        'RocksDB, Cassandra and LevelDB LSM trees; Bloom filters to skip files that cannot contain a key.',
+      ],
+      numbersToKnow: [
+        'log2(1,000,000) is about 20, so binary search on a million items needs about 20 comparisons.',
+        'A B+ tree with a few hundred keys per page typically reaches billions of rows in 3 to 4 levels. // VERIFY depends on key size and page size',
+        'Sorting a million items in Python takes on the order of a second or less on typical hardware. // VERIFY by measuring',
+      ],
+    },
+  },
+  sim: 'big-o',
+  worked: null,
+  code: [
+    {
+      lang: 'python',
+      title: 'Python: list scan vs set lookup',
+      code: [
+        'import time',
+        '',
+        'ids = list(range(200_000))',
+        'id_set = set(ids)',
+        'queries = range(199_000, 200_000)',
+        '',
+        't = time.perf_counter()',
+        'hits = sum(1 for q in queries if q in ids)       # O(n) each',
+        'print("list:", round(time.perf_counter() - t, 3), "s")',
+        '',
+        't = time.perf_counter()',
+        'hits = sum(1 for q in queries if q in id_set)    # O(1) average',
+        'print("set: ", round(time.perf_counter() - t, 6), "s")',
+      ].join('\n'),
+      annotations: [
+        { line: 4, text: 'Building the set costs O(n) once; it pays off when you do many lookups.' },
+        { line: 8, text: 'Every "in list" walks the list: roughly 1,000 x 200,000 comparisons.' },
+        { line: 12, text: 'Hash lookups stay flat as the set grows. Exact timings vary by machine.' },
+      ],
+    },
+    {
+      lang: 'python',
+      title: 'Python: binary search and top-k with a heap',
+      code: [
+        'import bisect, heapq',
+        '',
+        'prices = [5, 9, 12, 20, 31, 47]         # sorted',
+        'i = bisect.bisect_left(prices, 20)',
+        'print(i, prices[i] == 20)               # 3 True',
+        '',
+        'scores = [88, 42, 97, 63, 71, 99, 15]',
+        'print(heapq.nlargest(3, scores))        # [99, 97, 88]',
+      ].join('\n'),
+      annotations: [
+        { line: 3, text: 'Binary search requires sorted data.' },
+        { line: 4, text: 'bisect does O(log n) comparisons and returns the insertion point.' },
+        { line: 8, text: 'nlargest uses a heap of size k, about O(n log k), better than sorting everything for small k.' },
+      ],
+    },
+  ],
+  interview: [
+    {
+      level: 'beginner',
+      q: 'What is Big-O notation?',
+      answer: 'It describes how the amount of work grows as the input size n grows, ignoring constants. O(1) is constant, O(log n) grows very slowly, O(n) grows in step with the data, O(n^2) grows much faster and quickly becomes unusable.',
+      followUps: ['What is the Big-O of looking up a key in a dict?', 'Why do we ignore constants?'],
+    },
+    {
+      level: 'beginner',
+      q: 'Why is a dictionary lookup usually faster than searching a list?',
+      answer: 'A dict hashes the key to jump straight to where the value is stored, so lookup takes about the same time regardless of size (average O(1)). A list must compare items one by one until it finds a match (O(n)).',
+      followUps: ['What must be true of a dict key?', 'When can a dict lookup be slow?'],
+    },
+    {
+      level: 'intermediate',
+      q: 'How would you find the top 10 items from a stream of a billion records?',
+      answer: 'Keep a min-heap of size 10. For each record, if it is larger than the heap minimum, replace the minimum. This takes O(n log k) time and O(k) memory, and never stores the full data. For distributed data, compute top-k per shard and merge.',
+      followUps: ['Why a min-heap rather than a max-heap?', 'How does this change if the data is on disk across machines?'],
+    },
+    {
+      level: 'intermediate',
+      q: 'Your endpoint is slow when two lists of 50,000 items are compared with nested loops. What do you do?',
+      answer: 'Put one list into a set or dict keyed by the comparison key, then loop over the other and look up in O(1). This turns O(n*m) into O(n+m). Check that keys are hashable and normalised, and measure to confirm.',
+      followUps: ['What is the memory trade-off?', 'What if the data does not fit in memory?'],
+    },
+    {
+      level: 'expert',
+      q: 'Why do databases use B+ trees rather than hash tables or binary trees for indexes?',
+      answer: 'Disk access works in pages, so a wide, shallow tree minimises page reads: a few hundred keys per node gives billions of rows in 3 to 4 levels. B+ trees also keep keys ordered, supporting range scans and ORDER BY, and linked leaves make scans sequential. Hash indexes only support equality, and binary trees would be tall with many random reads.',
+      followUps: ['When would an LSM tree be a better choice?', 'What does a page split cost on write?'],
+    },
+    {
+      level: 'expert',
+      q: 'An in-memory lookup that is O(1) on paper causes latency spikes in production. What could be happening?',
+      answer: 'Candidates: hash table resizes on a huge dict, garbage collection pauses with millions of objects, cache misses and memory pressure or swapping, lock contention if shared across threads, or hash collisions from skewed keys. Profile with tracemalloc, py-spy, and latency percentiles, then consider pre-sizing, sharding the structure, using compact arrays, or moving data to Redis or a database index.',
+      followUps: ['How would you measure GC impact?', 'When is moving it out of process worth the network hop?'],
+    },
+  ],
+  quiz: [
+    {
+      level: 'beginner',
+      q: 'Which Big-O grows the slowest as n gets large?',
+      options: ['O(n^2)', 'O(n log n)', 'O(log n)', 'O(n)'],
+      answerIndex: 2,
+      why: 'Logarithmic growth is very slow; binary search on a million items needs about 20 steps.',
+    },
+    {
+      level: 'intermediate',
+      q: 'You check "if x in my_list" inside a loop over 100,000 items, and my_list also has 100,000 items. What is the best fix?',
+      options: ['Use a bigger list', 'Convert my_list to a set before the loop', 'Sort the list inside the loop', 'Use recursion'],
+      answerIndex: 1,
+      why: 'A set gives average O(1) membership tests, turning the O(n^2) loop into roughly O(n).',
+    },
+    {
+      level: 'intermediate',
+      q: 'Binary search requires which of the following?',
+      options: ['Unique values only', 'Sorted data with random access', 'A hash table', 'Fewer than 100 items'],
+      answerIndex: 1,
+      why: 'Halving the range only works if the data is ordered and you can jump to the middle quickly.',
+    },
+    {
+      level: 'expert',
+      q: 'Why are B+ trees preferred over binary search trees for database indexes?',
+      options: ['They use less code', 'They are wide and shallow, so few disk pages are read per lookup', 'They avoid sorting entirely', 'They only work in memory'],
+      answerIndex: 1,
+      why: 'Fan-out of hundreds per node keeps the tree 3 to 4 levels deep, minimising slow page reads, while preserving key order for ranges.',
+    },
+  ],
+});

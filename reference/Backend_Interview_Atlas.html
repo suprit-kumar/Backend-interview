@@ -1,0 +1,187 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Backend Interview Atlas</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--tx:#18202f;--mu:#5d6679;--ac:#2f5bea;--ok:#15803d;--bad:#c62828;--wn:#b45309;--bd:#d9dfeb;--hl:#e4ebff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e131f;--card:#172033;--tx:#e6eaf5;--mu:#98a3bb;--ac:#7c9bff;--ok:#4ade80;--bad:#f87171;--wn:#fbbf24;--bd:#2a3550;--hl:#1f2d57;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0e131f;--card:#172033;--tx:#e6eaf5;--mu:#98a3bb;--ac:#7c9bff;--ok:#4ade80;--bad:#f87171;--wn:#fbbf24;--bd:#2a3550;--hl:#1f2d57;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 Georgia,'Times New Roman',serif}
+.app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+aside{border-right:1px solid var(--bd);background:var(--card);padding:14px;max-height:100vh;overflow:auto;position:sticky;top:0}
+aside h1{font:700 20px/1.2 system-ui,sans-serif;margin:0 0 10px}
+input[type=search]{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:15px system-ui}
+.cat{font:700 13px system-ui;color:var(--mu);margin:16px 0 4px}
+.it{display:block;width:100%;text-align:left;background:none;border:0;color:var(--tx);padding:6px 8px;border-radius:6px;cursor:pointer;font:14px system-ui}
+.it:hover{background:var(--hl)}.it.on{background:var(--ac);color:#fff}
+main{padding:28px;max-width:860px;width:100%}
+h2{font:700 30px/1.15 system-ui,sans-serif;margin:0}small{color:var(--mu);font:14px system-ui}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:18px 0}
+.st{padding:10px 12px;border:2px solid var(--bd);border-radius:10px;background:var(--card);font:14px system-ui;transition:.3s}
+.st.on{border-color:var(--ac);background:var(--hl);transform:translateY(-3px)}
+.ar{color:var(--mu)}
+button.b,.sim button{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 14px system-ui;cursor:pointer;margin:4px 2px}
+.sim{border:1px solid var(--bd);background:var(--card);border-radius:12px;padding:16px;margin-top:20px;font:15px system-ui}
+.sim select,.sim input{font:14px system-ui}
+.badge{display:inline-block;color:#fff;padding:4px 12px;border-radius:99px;margin:8px 0;font:700 14px system-ui}
+.log{max-height:160px;overflow:auto;font-size:14px}.log div{padding:2px 0;border-bottom:1px dashed var(--bd)}
+.tok{display:flex;gap:8px;margin:10px 0;min-height:28px;align-items:center}
+.tok i,.tok u{width:24px;height:24px;border-radius:50%;display:inline-block}.tok i{background:var(--ac)}.tok u{border:2px dashed var(--mu)}
+.chip{padding:6px 14px;border:2px solid var(--ac);border-radius:8px;background:var(--hl)}
+.bar{display:inline-block;height:12px;background:var(--ac);border-radius:6px;vertical-align:middle;transition:.3s}
+.note{color:var(--mu);font:14px system-ui;margin-top:14px}.flow{position:relative;padding-top:16px}.pk{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 5px var(--hl);transition:left .6s,top .6s;z-index:2;pointer-events:none}.cap{margin:12px 0;padding:12px 14px;border-left:4px solid var(--ac);background:var(--card);border-radius:0 10px 10px 0;font:15px system-ui}.pg{height:5px;background:var(--bd);border-radius:3px;margin-top:8px}.pg i{display:block;height:100%;background:var(--ac);border-radius:3px;transition:.5s}.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:12px 0}.grid span{padding:4px;text-align:center;border:1px solid var(--bd);border-radius:6px;font-size:13px}.grid .v{background:var(--hl);border-color:var(--ac)}.grid .f{background:var(--ok);color:#fff}.term{background:#0b1020;color:#d7e0ff;font:13px/1.7 ui-monospace,Menlo,monospace;border-radius:10px;padding:12px;margin:10px 0;min-height:64px}.term div{animation:fi .4s}.term .bad{color:#ff8a8a}.term .ok{color:#7ee0a0}.term .dim{color:#8e9ac2}@keyframes fi{from{opacity:0;transform:translateX(-6px)}}@media(prefers-reduced-motion:reduce){.term div{animation:none}}
+@media(max-width:760px){.app{display:block}aside{position:static;max-height:260px;border-right:0;border-bottom:1px solid var(--bd)}main{padding:18px}}
+</style></head><body><div class="app"><aside><h1>Backend Interview Atlas</h1><input type="search" id="q" placeholder="Search topics"><div id="nav"></div></aside><main id="m"></main></div>
+<script>
+const D=`Foundations
+Programming Language Fundamentals|Types, scope and memory decide how your code behaves at runtime.|Source code>Parse or compile>Runtime (stack and heap)>Output
+Object-Oriented Programming (OOP)|Model software as objects that bundle state and behaviour.|Class>Object>Encapsulation>Inheritance and polymorphism
+SOLID Principles|Five rules that keep classes easy to change.|Single responsibility>Open/closed>Liskov substitution>Interface segregation>Dependency inversion
+Clean Code|Readable code is cheaper to maintain than clever code.|Name things well>Keep functions small>Remove duplication>Refactor under tests
+Data Structures & Algorithms|Pick the structure that makes your key operation cheap.|Define the problem>Choose a structure>Write the algorithm>Check Big-O
+Design Patterns|Named, reusable answers to recurring design problems.|Spot the problem>Pick a pattern (Factory, Observer)>Apply>Review trade-offs
+API & Web
+REST APIs|Resources live at URLs and are changed with HTTP verbs.|Client>GET/POST/PUT/DELETE /users/1>Server>JSON and status code
+HTTP / HTTPS|A request/response protocol; HTTPS wraps it in TLS.|TCP connect>TLS handshake>Request>Response
+API Design & Versioning|Stable contracts let clients upgrade on their own schedule.|Design the contract>Publish /v1>Ship breaking changes as /v2>Deprecate v1
+Authentication & Authorization|AuthN proves who you are; AuthZ decides what you may do.|Login>Verify identity>Check permissions>Allow or deny
+JWT / OAuth 2.0|Signed tokens and delegated access without sharing passwords.|User approves app>Auth server issues token>App calls API>API verifies signature
+Session Management|The server remembers a logged-in user between requests.|Login>Create session ID>Store in cookie>Look up on each request
+Data
+SQL|Declarative queries: you say what you want, the engine picks how.|Parse>Plan>Execute>Return rows
+Database Design & Normalization|Store each fact once to avoid update anomalies.|Find entities>Make tables>Normalize (1NF to 3NF)>Add foreign keys
+Indexing|A B-tree finds rows without scanning the whole table.|Query WHERE id=42>Walk B-tree (3-4 hops)>Get row pointer>Fetch row
+Transactions & ACID|All-or-nothing changes that keep data valid.|BEGIN>Make changes>COMMIT or ROLLBACK>Flushed to disk (durable)
+Database Isolation Levels|How much concurrent transactions may see of each other.|Read uncommitted>Read committed>Repeatable read>Serializable
+Database Locking|Locks stop two writers from corrupting one row.|Tx A locks row>Tx B waits>A commits>B proceeds
+Optimistic & Pessimistic Concurrency Control|Lock up front, or detect conflicts at write time.|Read row and version>Edit>UPDATE WHERE version unchanged>Retry if 0 rows updated
+NoSQL Databases|Trade rigid schema for flexible models and horizontal scale.|Pick model (document, key-value, column, graph)>Partition by key>Write>Replicate
+Performance & Caching
+Caching|Keep hot data close so you skip the slow source.|Request>Check cache>Miss: read DB and store>Hit: return fast
+Redis|An in-memory store with rich data types and TTLs.|App>GET key>Found in RAM>Return in under 1 ms
+Connection Pooling|Reuse open connections instead of reconnecting each time.|Borrow connection>Run query>Return to pool>Next request reuses it
+Database Query Optimization|Read the plan, then fix scans, joins and missing indexes.|Run EXPLAIN>Spot full scan>Add index or rewrite>Re-measure
+Performance Optimization|Measure first, then fix the biggest bottleneck.|Profile>Find hotspot>Fix one thing>Measure again
+Concurrency & Messaging
+Multithreading & Concurrency|Many tasks in progress at once; shared state needs care.|Spawn threads>Share memory>Lock critical section>Join
+Asynchronous Programming|One thread switches tasks while others wait on I/O.|Start I/O>Yield to event loop>Run other tasks>Resume on completion
+Message Queues|Producers and consumers are decoupled by a buffer.|Producer>Queue>Consumer pulls>Ack and delete
+Kafka / RabbitMQ|Kafka keeps a replayable log; RabbitMQ routes messages to queues.|Producer>Topic partition or exchange>Consumer group or queue>Offset or ack
+Event-Driven Architecture|Services react to facts that happened instead of being called.|Order placed event>Broker>Billing and stock react>Emit new events
+Architecture
+Microservices|Small services, each owning its data and deploy cycle.|Split by domain>Own database each>Talk over APIs or events>Deploy independently
+Monolith vs Microservices|One deployable is simple; many scale teams but add network cost.|Start monolith>Find hot or team-boundary modules>Extract>Pay for ops complexity
+Service-to-Service Communication|Sync calls are simple; async events are loosely coupled.|Service A>REST or gRPC (sync) or broker (async)>Service B>Reply or event
+API Gateway|A single front door for routing, auth and limits.|Client>Gateway (auth, limit)>Route to service>Aggregate response
+Reverse Proxy|Sits in front of servers to terminate TLS, cache and route.|Client>Proxy (Nginx)>Pick backend>Return response
+Load Balancing|Spread traffic so no server is overloaded.|Request>Balancer picks server>Server handles>Unhealthy servers skipped
+Rate Limiting|Cap requests per client to protect the service.|Request>Check bucket>Allowed: spend token>Empty: 429
+Idempotency|Repeating a request gives the same result as doing it once.|Client sends Idempotency-Key>Server stores result>Retry arrives>Return stored result
+Pagination|Return big result sets in pages.|Request page 1>Server returns items and cursor>Client sends cursor>Next page
+Resilience
+Retry Strategies & Exponential Backoff|Wait longer after each failure, with jitter, to avoid retry storms.|Call fails>Wait 1s>Wait 2s>Wait 4s then give up
+Circuit Breaker Pattern|Stop calling a failing dependency so it can recover.|Closed>Failures pile up>Open (fail fast)>Half-open probe
+Error Handling|Fail clearly, log context and never swallow errors.|Catch>Classify (retryable or not)>Log with context>Return clear error
+Fault Tolerance|The system keeps working when parts break.|Redundant parts>Detect failure>Fail over>Continue serving
+Health Checks|Probes tell the platform which instances to trust.|Probe /health>Healthy: keep traffic>Unhealthy: remove>Restart
+Scalability|Handle more load by adding capacity.|Load grows>Scale up or out>Balance traffic>Find the next bottleneck
+High Availability|Remove single points of failure to stay up.|Run 2+ nodes>Spread across zones>Detect failure>Auto failover
+Distributed Systems
+Distributed Transactions|One business action spanning several services or databases.|Start action>Update service A>Update service B>All succeed or undo
+Saga Pattern|A chain of local transactions with compensating undo steps.|Reserve stock>Charge card>Fails: refund>Release stock
+Two-Phase Commit (2PC)|A coordinator gets every node to agree before commit.|Prepare: ask all>All vote yes>Commit: tell all>Any no: abort
+CAP Theorem|During a network partition, pick consistency or availability.|Partition happens>Choose C: refuse requests>Or choose A: serve stale data>Heal
+Consistency Models|Rules for what readers see after a write.|Write>Replicate>Strong: read sees it now>Eventual: read sees it later
+Database Replication|Copy data to other nodes for reads and failover.|Write to primary>Ship log>Replicas apply>Reads served by replicas
+Database Sharding & Partitioning|Split data across nodes by a shard key.|Pick shard key>Hash key>Route to shard>Query only that shard
+Distributed Systems Fundamentals|Networks fail, clocks drift, nodes crash.|Nodes talk over network>Messages delay or drop>Detect failures>Agree on state
+Infrastructure
+Docker|Package an app with its dependencies into a container.|Dockerfile>Build image>Run container>Isolated process
+Kubernetes Basics|Schedules containers across machines and keeps them healthy.|Declare desired state>Scheduler places pods>Controller heals>Service routes traffic
+CI/CD|Automate build, test and deploy on every change.|Push code>Build and test>Package>Deploy
+Git|Distributed history built from commits and branches.|Edit>git add>git commit>git push and merge
+Linux Fundamentals|Processes, files, permissions and the shell.|Shell command>Process starts>Reads files (permissions)>Output to terminal
+Cloud Fundamentals|Rent compute, storage and managed services on demand.|Pick region>Provision compute>Attach storage and network>Pay per use
+Networking
+Networking Fundamentals|Layers move data from app to wire and back.|App data>Transport segments>IP packets>Link frames
+DNS|Turns names into IP addresses.|Browser asks resolver>Root>TLD>Authoritative returns IP
+TCP/IP|Reliable ordered delivery over unreliable packets.|SYN>SYN-ACK>ACK>Data with acknowledgements
+WebSockets|One persistent two-way connection for live updates.|HTTP upgrade request>101 Switching Protocols>Open socket>Both sides push messages
+Observability
+Logging|Timestamped records of what happened.|Event occurs>Write structured log>Ship to store>Search
+Monitoring|Watch health and alert when something looks wrong.|Collect signals>Compare to thresholds>Alert>Respond
+Metrics|Numeric time series such as latency and error rate.|Instrument code>Scrape or push>Store series>Dashboard
+Distributed Tracing|Follow one request across many services.|Create trace ID>Pass in headers>Each service adds a span>View waterfall
+Observability|Ask new questions about the system from its outputs.|Logs>Metrics>Traces>Find the root cause
+Security
+Security Best Practices|Least privilege, validated input, layered defences.|Validate input>Authenticate>Authorize least privilege>Log and patch
+OWASP Top 10|The most common web risks: injection, broken access control and more.|Review list>Map to your app>Test (injection, access)>Fix and retest
+Secrets Management|Keep keys out of code and rotate them.|Store in vault>App fetches at runtime>Short-lived access>Rotate
+Testing
+Testing|Automated checks give confidence to change code.|Write tests>Run in CI>Fail fast>Fix
+Unit Testing|Test one function in isolation.|Arrange>Act>Assert>Mock dependencies
+Integration Testing|Test components working together.|Start real DB or service>Call through the layers>Assert results>Tear down
+API Testing|Verify endpoints, status codes and payloads.|Send request>Check status>Check JSON schema>Check auth rules
+Load & Performance Testing|See how the system behaves under heavy traffic.|Define traffic>Ramp users>Watch latency and errors>Find the breaking point`;
+const T=[];let c='';D.split('\n').forEach(l=>{if(l.includes('|')){const[n,d,s]=l.split('|');T.push({c,n,d,s:s.split('>')})}else c=l});
+const S={};const $=(e,s)=>e.querySelector(s);
+S['Circuit Breaker Pattern']=el=>{let st='CLOSED',f=0,tm;el.innerHTML=`<div class=sim><b>Try it.</b> Downstream failure rate <input type=range id=r min=0 max=100 value=100> <span id=rv>100</span>%<br><button id=b>Send request</button><br><span id=bs class=badge></span><div id=lg class=log></div></div>`;
+const add=m=>$(el,'#lg').insertAdjacentHTML('afterbegin','<div>'+m+'</div>');
+const dr=()=>{const b=$(el,'#bs');b.textContent=st+' (failures: '+f+')';b.style.background=st=='CLOSED'?'var(--ok)':st=='OPEN'?'var(--bad)':'var(--wn)'};
+$(el,'#r').oninput=e=>$(el,'#rv').textContent=e.target.value;
+$(el,'#b').onclick=()=>{let m;if(st=='OPEN')m='⛔ Rejected instantly: circuit is open';else if(Math.random()*100<$(el,'#r').value){f++;m='❌ Downstream failed';if(st=='HALF-OPEN'||f>=3){st='OPEN';m+=', circuit opens for 5s';clearTimeout(tm);tm=setTimeout(()=>{st='HALF-OPEN';dr();add('⏳ Half-open: next request is a probe')},5000)}}else{m='✅ Success';f=0;if(st=='HALF-OPEN'){st='CLOSED';m+=', circuit closes'}}add(m);dr()};dr()};
+S['Rate Limiting']=el=>{let t=5;el.innerHTML=`<div class=sim><b>Token bucket.</b> Capacity 5, refills 1 token per second.<div id=tk class=tok></div><button id=b>Send request</button> <span id=m></span></div>`;
+const dr=()=>$(el,'#tk').innerHTML='<i></i>'.repeat(t)+'<u></u>'.repeat(5-t);dr();clearInterval(window.rl);
+window.rl=setInterval(()=>{if(!el.isConnected)return clearInterval(window.rl);if(t<5){t++;dr()}},1000);
+$(el,'#b').onclick=()=>{$(el,'#m').textContent=t>0?'✅ 200 OK':'🚫 429 Too Many Requests';if(t>0)t--;dr()}};
+S['Caching']=el=>{let c=[],h=0,m=0;el.innerHTML=`<div class=sim><b>LRU cache, size 3.</b> Request a key:<br>${[...'ABCDE'].map(k=>`<button data-k=${k}>${k}</button>`).join('')}<div id=cc class=tok></div><div id=ms></div></div>`;
+const dr=x=>{$(el,'#cc').innerHTML=c.map(k=>`<b class=chip>${k}</b>`).join('')||'empty';$(el,'#ms').textContent=x+' | hits '+h+', misses '+m};dr('Cache is empty');
+el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;let x;if(c.includes(k)){h++;c=c.filter(z=>z!=k);x='HIT: '+k+' served from cache'}else{m++;x='MISS: read '+k+' from the database';if(c.length==3)x+=', evicted '+c.pop()}c.unshift(k);dr(x)})};
+S['Load Balancing']=el=>{let n=[0,0,0],rr=0;el.innerHTML=`<div class=sim><b>Algorithm</b> <select id=a><option>Round robin</option><option>Least connections</option></select> <button id=b>Send request (held 4s)</button><div id=sv></div></div>`;
+const dr=()=>$(el,'#sv').innerHTML=n.map((v,i)=>`<div>Server ${i+1} <span class=bar style="width:${v*36}px"></span> ${v}</div>`).join('');dr();
+$(el,'#b').onclick=()=>{const i=$(el,'#a').value=='Round robin'?rr++%3:n.indexOf(Math.min(...n));n[i]++;dr();setTimeout(()=>{n[i]--;dr()},4000)}};
+S['Retry Strategies & Exponential Backoff']=el=>{el.innerHTML=`<div class=sim><b>Failure rate</b> <input type=range id=r value=70> <button id=b>Call API</button><div id=o></div></div>`;
+$(el,'#b').onclick=()=>{let o='',d=1;for(let a=1;a<=5;a++){const f=Math.random()*100<$(el,'#r').value;o+=`<div>Attempt ${a}: ${f?'❌ failed':'✅ success'}</div>`;if(!f)break;if(a<5){o+=`<div style="color:var(--mu)">wait ${d}s plus ${(Math.random()*d).toFixed(1)}s jitter</div>`;d*=2}else o+='<div>Gave up after 5 attempts</div>'}$(el,'#o').innerHTML=o}};
+S['Database Isolation Levels']=el=>{el.innerHTML=`<div class=sim><b>Isolation level</b> <select id=a><option>READ UNCOMMITTED</option><option selected>READ COMMITTED</option><option>REPEATABLE READ</option><option>SERIALIZABLE</option></select> <button id=b>Next step</button><button id=z>Reset</button><div id=lg class=log></div></div>`;let k=0;const L=()=>$(el,'#a').selectedIndex;
+const st=[()=>'Tx A and Tx B both BEGIN. balance = 100',()=>'Tx A: SELECT balance → 100',()=>'Tx B: UPDATE balance = 200 (not committed yet)',()=>'Tx A: SELECT balance → '+(L()==0?'200 ⚠ dirty read: B has not committed':'100 ✅'),()=>'Tx B: COMMIT',()=>'Tx A: SELECT balance again → '+(L()<2?'200 ⚠ non-repeatable read: value changed inside one transaction':'100 ✅ same snapshot as before')];
+$(el,'#b').onclick=()=>{$(el,'#lg').insertAdjacentHTML('beforeend','<div>'+(k<st.length?st[k++]():'Done. Change the level and press Reset to compare.')+'</div>')};$(el,'#z').onclick=()=>{k=0;$(el,'#lg').innerHTML=''}};
+S['Indexing']=el=>{const V=Array.from({length:32},(_,i)=>(i+1)*5);el.innerHTML=`<div class=sim><b>Find id</b> <select id=t>${[15,80,155].map(v=>`<option>${v}</option>`).join('')}</select> <button id=s>Full table scan</button><button id=x>Use index (binary search, like a B-tree)</button><div class=grid>${V.map(v=>`<span>${v}</span>`).join('')}</div><div id=o></div></div>`;const cs=[...el.querySelectorAll('.grid span')];let iv;
+const run=(q,ms)=>{clearInterval(iv);cs.forEach(c=>c.className='');const T=+$(el,'#t').value;let n=0;iv=setInterval(()=>{if(n>=q.length)return clearInterval(iv);const j=q[n++];cs[j].className=V[j]==T?'f':'v';$(el,'#o').textContent='Rows examined: '+n},ms)};
+$(el,'#s').onclick=()=>{const T=+$(el,'#t').value;run(V.slice(0,V.indexOf(T)+1).map((_,i)=>i),110)};
+$(el,'#x').onclick=()=>{const T=+$(el,'#t').value;let lo=0,hi=31,q=[];while(lo<=hi){const d=(lo+hi)>>1;q.push(d);if(V[d]==T)break;if(V[d]<T)lo=d+1;else hi=d-1}run(q,500)}};
+S['Saga Pattern']=el=>{el.innerHTML=`<div class=sim><b>Order saga</b> <label><input type=checkbox id=f> make payment fail</label> <button id=b>Run saga</button><div id=lg class=log></div></div>`;
+$(el,'#b').onclick=()=>{const fail=$(el,'#f').checked,lg=$(el,'#lg');lg.innerHTML='';const s=['📦 Reserve stock ✅',fail?'💳 Charge card ❌ payment failed':'💳 Charge card ✅',...(fail?['↩ Compensate: release reserved stock ✅','🛑 Order cancelled, data consistent again']:['🚚 Create shipment ✅','🎉 Order complete'])];s.forEach((x,i)=>setTimeout(()=>lg.insertAdjacentHTML('beforeend','<div>'+x+'</div>'),i*700))}};
+S['CAP Theorem']=el=>{let v=[1,1,1],n=1;el.innerHTML=`<div class=sim><b>Mode</b> <select id=a><option>CP (consistent)</option><option>AP (available)</option></select> <label><input type=checkbox id=p> network partition (Node 3 cut off)</label><br><button id=w>Write new value on Node 1</button><button id=r>Read from Node 3</button><div id=nd class=tok></div><div id=o></div></div>`;
+const P=()=>$(el,'#p').checked,cp=()=>$(el,'#a').selectedIndex==0,o=x=>$(el,'#o').textContent=x;
+const dr=()=>$(el,'#nd').innerHTML=v.map((x,i)=>`<b class=chip style="${i==2&&P()?'opacity:.5;border-style:dashed':''}">Node ${i+1}: v${x}</b>`).join('');dr();
+$(el,'#p').onchange=()=>{if(!P())v[2]=v[0];dr()};
+$(el,'#w').onclick=()=>{if(P()&&cp())return o('❌ Write rejected: cannot reach all replicas (consistency kept, availability lost)');n++;v[0]=v[1]=n;if(!P())v[2]=n;dr();o(P()?'✅ Written to Nodes 1 and 2; Node 3 stays stale until the partition heals':'✅ Replicated to all nodes')};
+$(el,'#r').onclick=()=>o(P()&&cp()?'❌ Node 3 refuses to answer: it might be stale':'✅ Node 3 returns v'+v[2]+(v[2]<n?' ⚠ stale':' (up to date)'))};
+S['Kafka / RabbitMQ']=el=>{el.innerHTML=`<div class=sim><b>Consumers in group</b> <input type=range id=c min=1 max=4 value=1> <span id=cv>1</span><div id=o></div><button id=b>Produce 6 messages</button><div id=lg class=log></div></div>`;
+const dr=()=>{const c=+$(el,'#c').value;$(el,'#cv').textContent=c;let h='';for(let p=0;p<3;p++)h+=`<div>Partition ${p} → <b class=chip>Consumer ${p%c+1}</b></div>`;if(c>3)h+='<div style="color:var(--mu)">Consumer 4 sits idle: each partition has at most one consumer per group</div>';$(el,'#o').innerHTML=h};
+$(el,'#c').oninput=dr;dr();$(el,'#b').onclick=()=>{const c=+$(el,'#c').value;for(let i=0;i<6;i++){const p=i%3;$(el,'#lg').insertAdjacentHTML('afterbegin',`<div>msg ${i} → partition ${p} → Consumer ${p%c+1}</div>`)}}};
+const W={
+'Transactions & ACID':{p:`Transfer ₹500 from Asha to Ravi. The server crashes right after the debit.`,b:[`#Start: Asha 1000, Ravi 200`,`UPDATE accounts SET bal = bal - 500 WHERE name='Asha'  → Asha 500`,`!💥 Server crashes before the credit runs`,`!Now: Asha 500, Ravi 200 → ₹500 has vanished`],g:[`BEGIN`,`UPDATE accounts ... Asha → 500 (not committed)`,`!💥 Server crashes before COMMIT`,`+Database rolls the transaction back on restart`,`+Asha 1000, Ravi 200 → nothing lost`],k:`Atomicity: both updates happen, or neither does.`},
+'Optimistic & Pessimistic Concurrency Control':{p:`Two admins edit the same product price at the same moment.`,b:[`#Both read price = 100`,`Admin A saves price = 120`,`Admin B saves price = 90`,`!A's change is silently overwritten (lost update)`],g:[`Both read price = 100, version = 1`,`A: UPDATE ... SET price=120, version=2 WHERE version=1 → 1 row changed`,`B: UPDATE ... SET price=90, version=2 WHERE version=1 → 0 rows changed`,`+B is told someone else edited this, reloads price = 120 and retries`,`+No update lost`],k:`Optimistic locking turns silent overwrites into detected conflicts.`},
+'Idempotency':{p:`A user taps Pay, the network times out, and the app retries.`,b:[`POST /pay amount=500 → charged (response lost)`,`Client retries: POST /pay amount=500 → charged again`,`!Customer is charged ₹1000 for one order`],g:[`POST /pay  Idempotency-Key: k-81 → charged, result stored`,`#Response lost, client retries with the same key`,`POST /pay  Idempotency-Key: k-81 → key found`,`+Server replays the stored result, no second charge`,`+Customer charged ₹500 once`],k:`The key lets the server recognise a repeat and replay the first answer.`},
+'Pagination':{p:`A feed shows newest posts first. A new post arrives while the user moves to page 2.`,b:[`Page 1 (OFFSET 0 LIMIT 3): posts 9, 8, 7`,`#Post 10 is added at the top`,`Page 2 (OFFSET 3 LIMIT 3): posts 7, 6, 5`,`!Post 7 shows twice because positions shifted`],g:[`Page 1: posts 9, 8, 7 → cursor = 7`,`#Post 10 is added at the top`,`Page 2: WHERE id < 7 LIMIT 3 → posts 6, 5, 4`,`+No duplicates, no skips, and the index keeps it fast`],k:`Cursor pagination anchors to a row, not to a position.`},
+'Rate Limiting':{p:`A buggy client sends 100 requests per second to an API that can handle 10.`,b:[`t=0s: 100 requests/s arrive`,`!Queue grows, latency goes from 50 ms to 4 s`,`!t=5s: server runs out of memory, every user gets errors`],g:[`t=0s: 100 requests/s arrive, limit is 10/s`,`+10 served (200 OK)`,`+90 rejected instantly (429, Retry-After: 1)`,`+Other users still see normal latency`],k:`Limits protect shared capacity from one bad client.`},
+'Retry Strategies & Exponential Backoff':{p:`A service recovers from a 5 second outage while 1,000 clients are retrying.`,b:[`#All 1,000 clients retry every 1s with no delay`,`t=5s: service restarts`,`!1,000 requests hit it at the same instant`,`!It falls over again (retry storm)`],g:[`#Clients wait 1s, 2s, 4s, 8s plus random jitter`,`t=5s: service restarts`,`+Retries are spread across several seconds`,`+Load ramps up gently and the service stays healthy`],k:`Backoff slows retries and jitter stops them arriving together.`},
+'Circuit Breaker Pattern':{p:`The payment service hangs. Checkout waits 30s per call on 20 worker threads.`,b:[`t=0s: payment hangs`,`!All 20 checkout threads are stuck waiting`,`!Checkout stops responding, then the whole site slows (cascading failure)`],g:[`t=0s: payment hangs, 5 calls fail in a row`,`+Breaker opens: checkout fails in 1 ms and shows try again later`,`+Threads stay free, the rest of the site keeps working`,`#After 30s: half-open, one probe request`,`+Probe succeeds, breaker closes`],k:`Fail fast so one slow dependency cannot take everything down.`},
+'Asynchronous Programming':{p:`Fetch 3 APIs that each take 1 second.`,b:[`await fetch(A) ... 1s`,`await fetch(B) ... 1s`,`await fetch(C) ... 1s`,`!Total: 3 seconds, idle while waiting each time`],g:[`start A, B and C together (asyncio.gather)`,`all three wait on the network at the same time`,`+Total: about 1 second`,`#One thread, no extra cores: it is waiting, not computing`],k:`Async overlaps waiting time, so it helps I/O-bound work.`},
+'Multithreading & Concurrency':{p:`Two threads each add 1 to a shared counter 1,000 times.`,b:[`#counter = 0`,`Thread 1 reads 41, Thread 2 reads 41`,`Both write 42`,`!Two increments, but the counter moved by 1 (race condition)`,`!Final value is below 2,000, and different on every run`],g:[`#counter = 0`,`Thread 1 takes the lock, reads 41, writes 42, releases`,`Thread 2 takes the lock, reads 42, writes 43`,`+Final value is exactly 2,000`],k:`Read-modify-write on shared data needs a lock or an atomic operation.`},
+'Database Query Optimization':{p:`Show 100 orders with the customer name for each.`,b:[`SELECT * FROM orders → 1 query`,`For each order: SELECT * FROM customers WHERE id=? → 100 queries`,`!101 queries, about 1 second at 10 ms each (the N+1 problem)`],g:[`SELECT o.*, c.name FROM orders o JOIN customers c ON c.id = o.customer_id`,`+1 query, about 10 ms`],k:`Replace per-row queries with one join or one batched IN query.`},
+'Caching':{p:`A popular product page expires from the cache and 500 users load it in the same second.`,b:[`Cache entry expires`,`!500 requests all miss`,`!500 identical database queries run at once`,`!Database overloads`],g:[`Cache entry expires`,`First request misses and takes a short lock to rebuild`,`+The other 499 wait a moment or get the slightly stale value`,`+1 database query, then everything is served from cache`],k:`Prevent cache stampedes with locks, stale-while-revalidate or jittered TTLs.`},
+'OWASP Top 10':{p:`A login query is built by gluing strings together. The attacker types x' OR '1'='1 as the password.`,b:[`SQL sent: SELECT * FROM users WHERE name='admin' AND pw='x' OR '1'='1'`,`!The OR '1'='1' part is always true`,`!Attacker is logged in as admin without a password`],g:[`SQL template: SELECT * FROM users WHERE name=? AND pw=?`,`Values travel separately: admin and x' OR '1'='1`,`+The input is treated as plain text, never as SQL`,`+No row matches, login fails`],k:`Use parameterised queries so data can never become code.`},
+'Message Queues':{p:`Flash sale: a burst of 1,000 orders arrives in one second, but billing handles 100 per second.`,b:[`Orders call billing directly`,`!Billing is overwhelmed and requests time out`,`!Customers see errors and orders are lost`],g:[`Orders are written to a queue (fast)`,`+Customers instantly see: order received`,`Billing consumes 100 per second at its own pace`,`+1,000 orders drain in about 10 seconds, none lost`],k:`A queue absorbs bursts so the slower service works at its own speed.`},
+'Distributed Tracing':{p:`A checkout takes 3 seconds. Which of 6 services is slow?`,b:[`Open logs of service 1... then 2... then 3...`,`!Timestamps differ and there is no shared ID`,`!Hours of guessing`],g:[`Gateway gives the request trace ID t-7f3`,`Every service times its own span with that ID`,`Waterfall: gateway 20 ms, orders 80 ms, inventory 2,700 ms, payment 200 ms`,`+Inventory is the culprit, found in seconds`],k:`One trace ID ties a request together across every service.`}};
+function work(el,w){el.innerHTML=`<div class=sim><b>Live worked example</b><p>${w.p}</p><button id=wb style='background:var(--bad)'>Run without the fix</button><button id=wg style='background:var(--ok)'>Run with the fix</button><div id=wl class=term><span class=dim>Pick a run to watch it happen line by line.</span></div><div id=wt></div></div>`;
+const go=L=>{(window.wq||[]).forEach(clearTimeout);window.wq=[];const t=$(el,'#wl');t.innerHTML='';$(el,'#wt').innerHTML='';L.forEach((x,i)=>window.wq.push(setTimeout(()=>{const c=x[0]=='!'?'bad':x[0]=='+'?'ok':x[0]=='#'?'dim':'';t.insertAdjacentHTML('beforeend',`<div class='${c}'>${(c?x.slice(1):x).replace(/</g,'&lt;')}</div>`);if(i==L.length-1)$(el,'#wt').innerHTML=`<div class=cap><b>Takeaway:</b> ${w.k}</div>`},i*800)))};
+$(el,'#wb').onclick=()=>go(w.b);$(el,'#wg').onclick=()=>go(w.g)}
+const nav=document.getElementById('nav'),m=document.getElementById('m');let tm;
+function list(f=''){let h='',c='';T.forEach((t,i)=>{if(!t.n.toLowerCase().includes(f))return;if(t.c!=c){c=t.c;h+=`<div class=cat>${c}</div>`}h+=`<button class=it data-i=${i}>${t.n}${S[t.n]?' ▶':''}${W[t.n]?' ✎':''}</button>`});nav.innerHTML=h;
+nav.querySelectorAll('.it').forEach(b=>b.onclick=()=>show(+b.dataset.i))}
+function show(i){const t=T[i];clearInterval(tm);m.innerHTML=`<h2>${t.n}</h2><small>${t.c}${S[t.n]?' | interactive simulation below':''}</small><p>${t.d}</p><div class=flow><span class=pk></span>${t.s.map(x=>`<div class=st>${x}</div>`).join('<span class=ar>→</span>')}</div><button class=b id=pv>Back</button><button class=b id=pl>Pause</button><button class=b id=nx>Next</button><div id=cap class=cap></div><div id=wk></div><div id=sim></div><p class=note>In the sidebar, ▶ marks a hands-on simulation and ✎ marks a live worked example.</p>`;
+const e=[...m.querySelectorAll('.st')],pk=$(m,'.pk'),cap=$(m,'#cap');let k=0,run=true;
+const go=j=>{k=(j+e.length)%e.length;e.forEach((x,z)=>x.classList.toggle('on',z==k));const x=e[k];pk.style.left=x.offsetLeft+x.offsetWidth/2-8+'px';pk.style.top=x.offsetTop-12+'px';cap.innerHTML=`<b>Step ${k+1} of ${e.length}:</b> ${t.s[k]}<div class=pg><i style="width:${(k+1)/e.length*100}%"></i></div>`};
+$(m,'#pl').onclick=ev=>{run=!run;ev.target.textContent=run?'Pause':'Play'};$(m,'#nx').onclick=()=>go(k+1);$(m,'#pv').onclick=()=>go(k-1);go(0);tm=setInterval(()=>{if(run)go(k+1)},1600);
+if(W[t.n])work($(m,'#wk'),W[t.n]);if(S[t.n])S[t.n]($(m,'#sim'));nav.querySelectorAll('.it').forEach(b=>b.classList.toggle('on',+b.dataset.i==i))}
+document.getElementById('q').oninput=e=>list(e.target.value.toLowerCase());list();show(0);
+</script></body></html>

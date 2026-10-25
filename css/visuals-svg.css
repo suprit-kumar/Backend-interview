@@ -1,0 +1,87 @@
+/* Drawing styles for each visual renderer (SVG and HTML). All colours come from theme variables so both themes work. */
+.sv-label { font: 600 13px var(--font-ui); fill: var(--text); }
+.sv-sub { font: 500 11px var(--font-ui); fill: var(--text-3); }
+.sv-sub-strong { font: 600 11px var(--font-ui); fill: var(--text); }
+.sv-tag { font: 700 9px var(--font-ui); letter-spacing: .08em; fill: var(--text-3); }
+.sv-edge-label { font: 600 11.5px var(--font-ui); fill: var(--text-2); paint-order: stroke; stroke: var(--surface-2); stroke-width: 4px; }
+.sv-num { font: 700 10px var(--font-mono); fill: var(--text-3); }
+.sv-pay { font: 500 11px var(--font-mono); fill: var(--text-2); }
+.sv-lifeline { stroke: var(--border-strong); stroke-dasharray: 4 5; }
+.viz-edge { stroke: var(--border-strong); stroke-width: 2; fill: none; }
+.viz-arrowhead { fill: var(--text-3); }
+.sv-edge.is-live .viz-edge { stroke: var(--cat, var(--primary)); stroke-width: 3; }
+.viz-token { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+
+.sv-node rect, .sv-node circle { fill: var(--surface); stroke: var(--border-strong); stroke-width: 2; }
+.sv-node.is-done rect, .sv-node.is-done circle { stroke: var(--cat, var(--primary)); opacity: .75; }
+.sv-node.is-active rect, .sv-node.is-active circle { fill: var(--cat-soft, var(--primary-soft)); stroke: var(--cat, var(--primary)); }
+.sv-node.is-dim { opacity: .4; }
+.sv-node.tone-ok rect { stroke: var(--ok); } .sv-node.tone-bad rect { stroke: var(--bad); } .sv-node.tone-warn rect { stroke: var(--warn); }
+.sv-node.tone-ok.is-active rect { fill: var(--ok-soft); } .sv-node.tone-bad.is-active rect { fill: var(--bad-soft); } .sv-node.tone-warn.is-active rect { fill: var(--warn-soft); }
+.sv-node:not(.is-active).tone-ok rect, .sv-node:not(.is-active).tone-bad rect, .sv-node:not(.is-active).tone-warn rect { opacity: .55; }
+.sv-node.is-failed rect, .sv-node.is-failed circle { fill: var(--bad-soft); stroke: var(--bad); }
+.sv-node.is-failed .sv-label { fill: var(--bad); }
+.sv-node.kind-client rect { stroke: var(--accent); } .sv-node.kind-lb rect { stroke: var(--primary); } .sv-node.kind-db rect { stroke: var(--ok); }
+.sv-node.kind-cache rect { stroke: var(--warn); } .sv-node.kind-queue rect { stroke: var(--primary-2); }
+.sv-node.kind-query rect { fill: var(--accent-soft); stroke: var(--accent); } .sv-node.kind-row rect { stroke: var(--ok); }
+.sv-msg.is-past { opacity: .6; } .sv-msg.is-active .viz-edge { stroke: var(--cat, var(--primary)); stroke-width: 3; }
+.sv-msg.tone-bad .viz-edge { stroke: var(--bad); } .sv-msg.tone-ok .viz-edge { stroke: var(--ok); } .sv-msg.is-back .viz-edge { stroke-dasharray: 6 4; }
+.sv-packet.tone-ok circle { fill: var(--ok); } .sv-packet.tone-bad circle { fill: var(--bad); }
+.sv-packet circle { stroke: var(--surface); stroke-width: 2; }
+.sv-payload { }
+
+.sw-lane { fill: var(--surface); } .sw-lane.is-alt { fill: var(--surface-2); }
+.sw-grid { stroke: var(--border); stroke-dasharray: 3 5; }
+.sw-block rect { stroke-width: 2; fill: var(--primary-soft); stroke: var(--primary); }
+.sw-block.kind-wait rect { fill: var(--surface-3); stroke: var(--text-3); stroke-dasharray: 5 3; }
+.sw-block.kind-block rect { fill: var(--warn-soft); stroke: var(--warn); }
+.sw-block.kind-lock rect { fill: var(--accent-soft); stroke: var(--accent); }
+.sw-block.kind-race rect { fill: var(--bad-soft); stroke: var(--bad); stroke-dasharray: 5 3; }
+.sw-text { font: 600 11.5px var(--font-ui); fill: var(--text); text-anchor: middle; }
+.sw-now { stroke: var(--bad); stroke-width: 2; } .sw-now-label { font: 700 11px var(--font-mono); fill: var(--bad); }
+.sw-window rect { fill: var(--bad-soft); stroke: var(--bad); stroke-dasharray: 4 3; }
+
+.wf-span rect { fill: var(--ok); } .wf-span.tone-warn rect { fill: var(--warn); } .wf-span.tone-bad rect { fill: var(--bad); }
+.wf-span.is-active rect { stroke: var(--text); stroke-width: 2; } .wf-span.is-hidden { opacity: 0; }
+.wf-label { font: 500 11.5px var(--font-mono); fill: var(--text-2); } .wf-note { font: 600 10.5px var(--font-ui); fill: #fff; }
+
+.ly-hdr rect { fill: var(--primary-soft); stroke: var(--primary); stroke-width: 2; } .ly-hdr.is-active rect { fill: var(--cat-soft, var(--primary-soft)); stroke: var(--cat, var(--primary)); }
+.ly-payload rect { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 2; } .ly-brace { stroke: var(--text-3); fill: none; stroke-width: 2; }
+
+.ch-line { stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.ch-line.tone-primary, .ch-dot.tone-primary { stroke: var(--primary); } .ch-bar.tone-primary, .ch-dot.tone-primary { fill: var(--primary); }
+.ch-line.tone-accent { stroke: var(--accent); } .ch-bar.tone-accent, .ch-dot.tone-accent { fill: var(--accent); }
+.ch-line.tone-ok { stroke: var(--ok); } .ch-bar.tone-ok, .ch-dot.tone-ok { fill: var(--ok); }
+.ch-line.tone-warn { stroke: var(--warn); } .ch-bar.tone-warn, .ch-dot.tone-warn { fill: var(--warn); }
+.ch-line.tone-bad { stroke: var(--bad); } .ch-bar.tone-bad, .ch-dot.tone-bad { fill: var(--bad); }
+.ch-mark { stroke: var(--text-3); stroke-dasharray: 4 4; }
+
+.rg-ring { stroke: var(--border-strong); stroke-width: 3; } .rg-key { fill: var(--accent); } .rg-link { stroke: var(--accent); stroke-dasharray: 3 3; }
+
+.cmp { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--sp-2); }
+.cmp-col { padding: var(--sp-2); border: 1px solid var(--border); border-top: 4px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); min-width: 0; }
+.cmp-col.is-without { border-top-color: var(--bad); } .cmp-col.is-with { border-top-color: var(--ok); }
+.cmp-col h3 { margin: 0 0 var(--sp-1); font-size: .85rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.cmp-lines { list-style: none; margin: 0; padding: 0; font: 400 .82rem/1.6 var(--font-mono); }
+.cmp-lines li { padding: 2px 0; } .cmp-lines .tone-bad { color: var(--bad); } .cmp-lines .tone-good { color: var(--ok); } .cmp-lines .tone-dim { color: var(--text-3); }
+.cmp-split { border-top: 1px dashed var(--border-strong); margin: 6px 0; }
+.cmp-verdict { margin: var(--sp-1) 0 0; font-weight: 700; font-size: .9rem; }
+.cmp-mid { display: flex; align-items: center; } .cmp-badge { padding: 4px 10px; border-radius: var(--r-pill); background: var(--warn-soft); color: var(--warn); font-size: .72rem; font-weight: 700; writing-mode: vertical-rl; }
+.cmp-badge[hidden] { display: none; }
+
+.ds-table-wrap { overflow-x: auto; }
+.ds-table { width: 100%; border-collapse: collapse; font: 500 .85rem var(--font-mono); }
+.ds-table th, .ds-table td { padding: 6px 12px; border: 1px solid var(--border); text-align: left; }
+.ds-table th { background: var(--surface-3); } .ds-table td { background: var(--surface); }
+.ds-table tr.is-active td { background: var(--cat-soft, var(--primary-soft)); } .ds-table tr.is-dim td { opacity: .45; } .ds-table td.is-cell { outline: 2px solid var(--cat, var(--primary)); }
+.ds-mem { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+.ds-mem h3, .ds-log h3 { margin: 0 0 var(--sp-1); font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+.ds-boxes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ds-boxes li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; border: 2px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface); font-size: .85rem; }
+.ds-boxes li span { color: var(--text-3); font-family: var(--font-mono); }
+.ds-boxes li.is-active, .ds-log li.is-active { border-color: var(--cat, var(--primary)); background: var(--cat-soft, var(--primary-soft)); }
+.ds-logs { display: grid; gap: var(--sp-2); }
+.ds-log ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ds-log li { display: flex; flex-direction: column; align-items: center; min-width: 64px; padding: 4px 10px; border: 2px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface); font: 500 .8rem var(--font-mono); }
+.ds-log .off { font-size: .68rem; color: var(--text-3); } .ds-log em { font: 600 .68rem var(--font-ui); color: var(--accent); }
+@media (max-width: 575.98px) { .cmp { grid-template-columns: minmax(0, 1fr); } .cmp-mid { justify-content: center; } .cmp-badge { writing-mode: horizontal-tb; } .ds-mem { grid-template-columns: minmax(0, 1fr); } }

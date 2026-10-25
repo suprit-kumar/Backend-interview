@@ -1,0 +1,267 @@
+/* Foundations: Clean Code. */
+Atlas.topics.push({
+  id: 'clean-code',
+  category: 'foundations',
+  title: 'Clean Code',
+  source: {
+    description: 'Readable code is cheaper to maintain than clever code.',
+    steps: ['Name things well', 'Keep functions small', 'Remove duplication', 'Refactor under tests'],
+  },
+  estMinutes: 12,
+  prereqs: ['programming-language-fundamentals'],
+  related: ['solid-principles', 'unit-testing', 'design-patterns', 'error-handling'],
+  tags: ['naming', 'refactoring', 'dry', 'readability', 'code review', 'tests', 'technical debt'],
+  visual: {
+    type: 'compare',
+    config: { left: { title: 'Before' }, right: { title: 'After' } },
+  },
+  steps: [
+    {
+      label: 'Name things well',
+      caption: {
+        beginner: 'A good name tells you what something is. "d" tells you nothing; "days_until_expiry" tells you everything.',
+        intermediate: 'Use intention-revealing names, avoid abbreviations and misleading names, and name booleans as questions (is_active). Longer names are fine for wider scope.',
+        expert: 'Names are the cheapest documentation and the hardest to change later (public APIs, DB columns, metrics). Use the domain language of the business so code, tickets and conversations agree.',
+      },
+      state: {
+        without: ['def f(d, x): return d - x > 7', 'tmp = f(a, b)'],
+        with: ['def is_overdue(due_date, today): return (today - due_date).days > 7', 'overdue = is_overdue(invoice.due, today)'],
+        diverge: 0,
+        verdict: { without: 'Reader must decode', with: 'Reads like the rule' },
+      },
+    },
+    {
+      label: 'Keep functions small',
+      caption: {
+        beginner: 'One function, one job. If you need the word "and" to describe it, split it.',
+        intermediate: 'Small functions at one level of abstraction are easier to name, test and reuse. Extract validation, calculation and persistence into separate functions.',
+        expert: 'Size is a proxy; the real goal is one level of abstraction and few branches (low cyclomatic complexity). Do not split mechanically: a long linear function can be clearer than many tiny ones that you must jump between.',
+      },
+      state: {
+        without: ['def checkout(): 80 lines: validate, price, charge, email', 'Test needs DB, payment and mail'],
+        with: ['validate(cart) / price(cart) / charge(order) / notify(order)', 'Each part testable alone'],
+        diverge: 1,
+        verdict: { without: 'One big tangle', with: 'Small named steps' },
+      },
+    },
+    {
+      label: 'Remove duplication',
+      caption: {
+        beginner: 'If you copy the same recipe into five places, fixing a mistake means fixing it five times. Write it once and reuse it.',
+        intermediate: 'Extract shared logic into a function or class (DRY: every piece of knowledge has one home). Fix a bug once and every caller benefits.',
+        expert: 'Duplicate code is cheaper than the wrong abstraction. Wait for the third occurrence, and only merge code that changes for the same reason; otherwise the shared helper grows flags and conditionals.',
+      },
+      state: {
+        without: ['tax = price * 0.18  (in 5 modules)', 'Rate changes -> miss one -> wrong totals'],
+        with: ['def add_tax(price): return price * TAX_RATE', 'Rate changes in one place'],
+        diverge: 1,
+        verdict: { without: 'Bug fixed 4 of 5 times', with: 'One fix, all callers' },
+      },
+    },
+    {
+      label: 'Refactor under tests',
+      caption: {
+        beginner: 'Tidy the room, but keep checking that nothing broke. Tests are the check that tells you the code still works after cleaning.',
+        intermediate: 'Refactoring changes structure, not behaviour. Run tests after every small step; if there are no tests, write characterisation tests first.',
+        expert: 'Work in small commits, keep refactors separate from feature changes so reviews and reverts stay simple, and use automation (formatters, linters, type checkers, IDE refactorings) to make mechanical steps safe.',
+      },
+      state: {
+        without: ['Rewrite 600 lines at once, no tests', 'Ship and hope'],
+        with: ['Add tests -> rename -> run -> extract -> run -> commit', 'Green after every step'],
+        diverge: 1,
+        verdict: { without: 'Regression risk', with: 'Provable behaviour' },
+      },
+    },
+  ],
+  levels: {
+    beginner: {
+      analogy: 'A tidy workshop. Every tool has a labelled spot, so anyone can find a screwdriver, do the job and put it back. A messy shop may have the same tools, but every task takes longer and mistakes are easy.',
+      explanation: 'Clean code is code that other people (and future you) can read quickly and change safely. It uses clear names, short focused functions, no copy-pasted logic, and tests that let you improve it without fear. It matters because most time on real projects is spent reading and changing code, not writing it.',
+      keyTerms: [
+        { term: 'Readability', meaning: 'How quickly someone else can understand what the code does.' },
+        { term: 'Refactoring', meaning: 'Improving the structure of code without changing what it does.' },
+        { term: 'DRY', meaning: 'Don\'t Repeat Yourself: each piece of knowledge lives in one place.' },
+        { term: 'Code smell', meaning: 'A sign that something may be wrong, like a very long function.' },
+        { term: 'Technical debt', meaning: 'Extra future cost caused by shortcuts taken now.' },
+      ],
+    },
+    intermediate: {
+      explanation: 'Clean code is a set of habits: intention-revealing names, functions at one abstraction level, minimal nesting (early returns), explicit error handling, comments that explain why not what, and consistent style enforced by tools. In reviews, readability and testability are first-class criteria next to correctness.',
+      howItWorks: [
+        'Name by intent and domain term; rename when understanding improves.',
+        'Extract functions until each reads as a list of steps at one level.',
+        'Use guard clauses to flatten nested if statements.',
+        'Replace magic numbers and strings with named constants or enums.',
+        'Automate the boring parts: formatter, linter, type checker in CI.',
+        'Refactor in small steps with tests green between steps.',
+      ],
+      tradeoffs: {
+        use: [
+          'Code will live for months or years and be read by several people.',
+          'The area changes often or has caused bugs; cleanup pays back quickly.',
+          'You are touching code for a feature anyway (leave it a little better: the boy scout rule).',
+        ],
+        avoid: [
+          'Do not do large cleanups of stable, untouched code with no tests; risk exceeds benefit.',
+          'Do not abstract before you see real repetition or change.',
+          'Do not mix a big refactor and a feature in one pull request; reviewers cannot verify either.',
+        ],
+      },
+      pitfalls: [
+        'Cleverness: one-line tricks or deep comprehensions that nobody can debug.',
+        'Comments that restate the code or go stale; the code and comment disagree.',
+        'Over-splitting into tiny functions so the reader must jump everywhere.',
+        'Wrong abstraction from merging code that only looked similar.',
+        'Boolean flag parameters (process(order, True, False)) that hide meaning.',
+      ],
+    },
+    expert: {
+      internals: [
+        'Measurable proxies: cyclomatic complexity, cognitive complexity, function length, coupling between modules, and churn (files that change often). Use them to find hotspots, not as targets.',
+        'Characterisation tests pin current behaviour of legacy code so you can refactor safely, even if the behaviour is odd.',
+        'Safe refactorings are mechanical (rename, extract function, inline); IDEs and tools like rope or ruff apply them without changing semantics.',
+        'Strangler-style refactoring replaces a legacy component piece by piece behind a stable interface instead of a rewrite.',
+      ],
+      failureModes: [
+        'Big-bang rewrites that lose undocumented behaviour and take far longer than estimated.',
+        'Style wars in review: use a formatter and linter so humans discuss design, not whitespace.',
+        'Refactoring without tests silently changing behaviour (for example reordering side effects or exception types).',
+        'Premature abstraction creating frameworks nobody asked for (the wrong abstraction costs more than duplication).',
+      ],
+      scalingNotes: [
+        'In large teams, consistency beats personal preference: shared style guides, pre-commit hooks and CI checks keep the codebase uniform.',
+        'Track hotspots (high churn and high complexity) to decide where cleanup effort pays off.',
+        'Make cleanup incremental and continuous; a dedicated "refactoring sprint" often stalls.',
+      ],
+      realSystems: [
+        'Black, Ruff, isort and mypy/pyright in Python CI; pre-commit hooks.',
+        'SonarQube and CodeClimate for complexity and duplication reports.',
+        'Michael Feathers\' "Working Effectively with Legacy Code" and Martin Fowler\'s refactoring catalogue as shared vocabulary.',
+      ],
+      numbersToKnow: [
+        'Cyclomatic complexity above roughly 10 per function is a common review threshold. // VERIFY team policy',
+        'Many teams aim for functions that fit on one screen (a few dozen lines), as a heuristic not a rule.',
+      ],
+    },
+  },
+  sim: null,
+  worked: null,
+  code: [
+    {
+      lang: 'python',
+      title: 'Python: before and after refactoring',
+      code: [
+        '# Before',
+        'def p(o, u):',
+        '    if u is not None:',
+        '        if u.active:',
+        '            if len(o) > 0:',
+        '                t = 0',
+        '                for i in o:',
+        '                    t += i.price * i.qty',
+        '                return t * 1.18',
+        '    return 0',
+        '',
+        '# After',
+        'TAX_RATE = 0.18',
+        '',
+        'def order_total(items, user) -> float:',
+        '    if user is None or not user.active or not items:',
+        '        return 0.0',
+        '    subtotal = sum(i.price * i.qty for i in items)',
+        '    return subtotal * (1 + TAX_RATE)',
+      ].join('\n'),
+      annotations: [
+        { line: 2, text: 'Cryptic names force the reader to decode the logic.' },
+        { line: 9, text: 'Magic number 1.18: what is it? Tax? Margin?' },
+        { line: 13, text: 'A named constant documents the intent and lives in one place.' },
+        { line: 16, text: 'A guard clause removes three levels of nesting.' },
+      ],
+    },
+    {
+      lang: 'python',
+      title: 'Python: replace a boolean flag with named functions',
+      code: [
+        '# Hard to read at the call site',
+        'send_report(user, True, False)',
+        '',
+        '# Clearer',
+        'def send_report_by_email(user): ...',
+        'def send_report_by_sms(user): ...',
+        'send_report_by_email(user)',
+      ].join('\n'),
+      annotations: [
+        { line: 2, text: 'Nobody can tell what True and False mean without opening the function.' },
+        { line: 7, text: 'The call site now reads as a sentence.' },
+      ],
+    },
+  ],
+  interview: [
+    {
+      level: 'beginner',
+      q: 'What makes code "clean"?',
+      answer: 'Other developers can read it quickly and change it safely: clear names, small focused functions, no duplicated logic, consistent style, and tests that catch mistakes.',
+      followUps: ['Give an example of a bad name and a better one.', 'Why does readability matter more than cleverness?'],
+    },
+    {
+      level: 'beginner',
+      q: 'What is refactoring?',
+      answer: 'Changing the internal structure of code to make it clearer without changing its behaviour. You do it in small steps and run tests after each step to prove nothing broke.',
+      followUps: ['Why are tests important here?', 'Is renaming a variable a refactoring?'],
+    },
+    {
+      level: 'intermediate',
+      q: 'Explain DRY and when it can be overdone.',
+      answer: 'DRY says each piece of knowledge should live in one place so a fix applies everywhere. It is overdone when you merge code that looks similar but changes for different reasons; the shared helper then grows flags and special cases. Prefer a little duplication until the third occurrence confirms a real abstraction.',
+      followUps: ['What is the rule of three?', 'How do you undo a wrong abstraction?'],
+    },
+    {
+      level: 'intermediate',
+      q: 'How do you review a pull request for clean code?',
+      answer: 'Check that names express intent, functions are small and at one level, errors are handled explicitly, tests cover the behaviour, and the change has one purpose. Leave style to formatters and linters so the review focuses on design and correctness.',
+      followUps: ['What would make you block a PR?', 'How do you give feedback on naming constructively?'],
+    },
+    {
+      level: 'expert',
+      q: 'You inherit a 3,000-line module with no tests that is business-critical. How do you improve it?',
+      answer: 'First pin behaviour: write characterisation tests around the main entry points using real inputs and outputs, including odd cases. Add logging or metrics to understand real usage. Then make small, behaviour-preserving refactors (rename, extract) behind those tests, commit often, and separate refactor commits from feature changes. For larger parts, use a strangler approach: route new behaviour to new code behind the same interface and retire old parts gradually.',
+      followUps: ['How do you test code with hidden side effects?', 'When would a rewrite be justified?'],
+    },
+    {
+      level: 'expert',
+      q: 'How do you balance cleanup against delivering features?',
+      answer: 'Tie cleanup to work being done: refactor the area you are about to change, keep it small and in separate commits. Use churn plus complexity data to pick hotspots, and make the business case in terms of lead time and defects. Avoid dedicated cleanup phases that get cancelled, and track debt explicitly so it is a visible decision.',
+      followUps: ['How do you measure whether cleanup helped?', 'How do you handle a team that disagrees on style?'],
+    },
+  ],
+  quiz: [
+    {
+      level: 'beginner',
+      q: 'Which name best follows clean-code guidelines for a boolean?',
+      options: ['flag', 'x1', 'is_active', 'status_bool_value_for_user'],
+      answerIndex: 2,
+      why: 'A boolean named as a yes/no question reads naturally in conditions and states its meaning.',
+    },
+    {
+      level: 'intermediate',
+      q: 'What is the safest way to refactor existing code?',
+      options: ['Rewrite everything at once', 'Small steps with tests passing after each', 'Refactor and add features in the same commit', 'Only refactor on Fridays'],
+      answerIndex: 1,
+      why: 'Small steps keep behaviour provable; tests catch accidental changes immediately.',
+    },
+    {
+      level: 'intermediate',
+      q: 'Two functions look alike but change for different business reasons. What should you do?',
+      options: ['Merge them with a flag parameter', 'Keep them separate for now', 'Delete one', 'Move both to a utils file'],
+      answerIndex: 1,
+      why: 'Merging code that changes for different reasons creates a wrong abstraction that is harder to maintain than duplication.',
+    },
+    {
+      level: 'expert',
+      q: 'What is a characterisation test?',
+      options: ['A test that describes the UI colours', 'A test that records current behaviour of existing code before refactoring', 'A load test for APIs', 'A test generated from the documentation'],
+      answerIndex: 1,
+      why: 'It pins what the code does today (even if odd) so refactoring can be verified to preserve behaviour.',
+    },
+  ],
+});

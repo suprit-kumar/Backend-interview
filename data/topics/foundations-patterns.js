@@ -1,0 +1,288 @@
+/* Foundations: Design Patterns. */
+Atlas.topics.push({
+  id: 'design-patterns',
+  category: 'foundations',
+  title: 'Design Patterns',
+  source: {
+    description: 'Named, reusable answers to recurring design problems.',
+    steps: ['Spot the problem', 'Pick a pattern (Factory, Observer)', 'Apply', 'Review trade-offs'],
+  },
+  estMinutes: 15,
+  prereqs: ['object-oriented-programming-oop', 'solid-principles'],
+  related: ['clean-code', 'event-driven-architecture', 'microservices', 'unit-testing'],
+  tags: ['factory', 'observer', 'strategy', 'singleton', 'adapter', 'decorator', 'gof', 'pub-sub'],
+  visual: {
+    type: 'sequence',
+    config: {
+      actors: [
+        { id: 'client', label: 'Client' },
+        { id: 'factory', label: 'Factory' },
+        { id: 'subject', label: 'Subject' },
+        { id: 'a', label: 'Observer A' },
+        { id: 'b', label: 'Observer B' },
+      ],
+    },
+  },
+  steps: [
+    {
+      label: 'Spot the problem',
+      caption: {
+        beginner: 'Something keeps being awkward: the main code has to know exactly which type to build, and every change forces edits in many places.',
+        intermediate: 'Two recurring problems: callers hard-code which concrete class to create, and one object needs to tell several others when it changes without knowing who they are.',
+        expert: 'Patterns are named trade-offs for forces you can observe: construction varies, behaviour varies, or change must fan out. Identify the force first; reaching for a pattern without one adds indirection for nothing.',
+      },
+      state: { messages: [{ from: 'client', to: 'client', label: 'needs an object; must not know the class', tone: 'warn' }] },
+    },
+    {
+      label: 'Pick a pattern (Factory, Observer)',
+      caption: {
+        beginner: 'Pick two tools: a Factory, like an order counter that hands you the right item when you ask, and an Observer, like a notification list you can subscribe to.',
+        intermediate: 'Factory centralises creation: the client asks for "email" or "sms" and gets a Notifier. Observer lets a Subject keep a list of subscribers and call them on change.',
+        expert: 'Factory hides which concrete type is built (and how it is configured), which supports dependency inversion. Observer is the in-process form of publish-subscribe; across processes the same idea becomes a message broker.',
+      },
+      state: {
+        messages: [
+          { from: 'client', to: 'factory', label: 'create("email")', tone: 'primary' },
+          { from: 'factory', to: 'client', label: 'EmailNotifier', tone: 'ok', back: true },
+        ],
+      },
+    },
+    {
+      label: 'Apply',
+      caption: {
+        beginner: 'Two observers sign up with the subject. When something happens, the subject tells everyone on its list, one by one.',
+        intermediate: 'Observers subscribe; on change, the subject calls notify() on each. The subject depends only on a small "update" interface, never on concrete observers.',
+        expert: 'Notification is synchronous by default, so a slow or failing observer blocks or breaks the rest. Isolate failures (try/except per observer), consider queues for slow work, and decide on ordering and re-entrancy rules.',
+      },
+      state: {
+        messages: [
+          { from: 'a', to: 'subject', label: 'subscribe()', tone: 'primary' },
+          { from: 'b', to: 'subject', label: 'subscribe()', tone: 'primary' },
+          { from: 'client', to: 'subject', label: 'set_state("paid")', tone: 'accent' },
+          { from: 'subject', to: 'a', label: 'update("paid")', tone: 'ok' },
+          { from: 'subject', to: 'b', label: 'update("paid")', tone: 'ok' },
+        ],
+      },
+      hood: 'Observers are called in subscription order; a raise in A stops B unless the subject catches per observer.',
+    },
+    {
+      label: 'Review trade-offs',
+      caption: {
+        beginner: 'Patterns help, but each adds more pieces. If one simple line of code does the job, you do not need a pattern.',
+        intermediate: 'Costs: more classes, indirection, harder debugging (who is subscribed?), and memory leaks if observers never unsubscribe. Benefits: loose coupling and easy extension.',
+        expert: 'Check for lapsed listeners (use weak references or explicit unsubscribe), notification storms, cycles where an observer changes the subject, and ordering assumptions. In distributed systems, switch to durable events with idempotent consumers.',
+      },
+      state: {
+        messages: [
+          { from: 'client', to: 'subject', label: 'set_state("shipped")', tone: 'accent' },
+          { from: 'subject', to: 'a', label: 'update("shipped")', tone: 'ok' },
+          { from: 'subject', to: 'b', label: 'update fails (slow/raises)', tone: 'bad' },
+        ],
+      },
+      hood: 'One failing observer must not stop the others: that is the main design review question.',
+    },
+  ],
+  levels: {
+    beginner: {
+      analogy: 'Recipes and a newsletter. A recipe is a proven way to make a dish so you do not invent bread from scratch each time (a pattern). A newsletter lets readers subscribe once and get every new issue without the writer knowing each reader (Observer).',
+      explanation: 'A design pattern is a well-known, named solution to a common design problem, described so you can reuse the idea, not copy code. Factory gives you one place that decides which object to create. Observer lets one object announce changes to many listeners. Knowing the names also helps teams talk about design quickly.',
+      keyTerms: [
+        { term: 'Design pattern', meaning: 'A named, reusable solution idea for a recurring design problem.' },
+        { term: 'Factory', meaning: 'A function or class that decides which object to create for you.' },
+        { term: 'Observer', meaning: 'Objects subscribe to another object and get notified when it changes.' },
+        { term: 'Subject', meaning: 'The object that is watched and sends notifications.' },
+        { term: 'Loose coupling', meaning: 'Parts know as little about each other as possible.' },
+      ],
+    },
+    intermediate: {
+      explanation: 'Patterns come in three families: creational (Factory, Builder, Singleton), structural (Adapter, Decorator, Facade, Proxy) and behavioural (Strategy, Observer, Command, State). In Python, many are lightweight: functions are first-class, so Strategy is often just a function, and a module can act as a singleton.',
+      howItWorks: [
+        'Factory: a function create_notifier(kind) returns an object implementing a shared interface; callers never import the concrete classes.',
+        'Strategy: inject an object or function that performs one step of an algorithm (pricing, sorting, retry policy).',
+        'Observer: subject holds a list of callbacks; subscribe/unsubscribe manage it; notify iterates and calls each.',
+        'Adapter: wraps a third-party API so it matches your interface.',
+        'Decorator: wraps an object or function to add behaviour (logging, caching, retries) without changing it. Python @decorator syntax is built in.',
+      ],
+      tradeoffs: {
+        use: [
+          'Creation logic varies or needs configuration (Factory, Builder).',
+          'Behaviour must be swapped at run time or in tests (Strategy, Adapter).',
+          'Several parts must react to one change without tight coupling (Observer, event bus).',
+        ],
+        avoid: [
+          'Avoid patterns for problems you do not have; a plain function is often enough.',
+          'Avoid Singleton for shared mutable state; it is a hidden global that makes tests order-dependent.',
+          'Avoid synchronous Observer when listeners are slow or unreliable; use a queue or broker.',
+        ],
+      },
+      pitfalls: [
+        'Pattern-itis: forcing GoF names onto simple code and adding layers.',
+        'Singletons that hold state, causing test pollution and concurrency bugs.',
+        'Observers that are never unsubscribed, leaking memory and firing on dead objects.',
+        'Hidden control flow: a change in one place triggers a chain nobody can trace.',
+        'Copying Java-style pattern code into Python instead of using functions and decorators.',
+      ],
+    },
+    expert: {
+      internals: [
+        'The GoF catalogue (23 patterns, 1994) names solutions in object-oriented languages; many dissolve into language features (first-class functions, decorators, generators, context managers).',
+        'Observer in process equals callbacks or signals (Django signals, Qt signals); across processes it becomes publish-subscribe through a broker, adding durability, ordering and delivery semantics.',
+        'Decorator and Proxy share structure but differ in intent: Decorator adds behaviour, Proxy controls access (lazy load, remote, auth).',
+        'Dependency injection containers are Factories plus lifecycle management.',
+      ],
+      failureModes: [
+        'Observer storms: a handler modifies the subject and triggers itself recursively.',
+        'Django signals hiding business logic so a save() call has invisible side effects that are hard to test.',
+        'Singleton and global registries breaking under multi-process servers (each worker has its own copy) and in tests.',
+        'Over-abstracted factories and builders that obscure simple construction.',
+      ],
+      scalingNotes: [
+        'When Observer crosses a service boundary, you need at-least-once delivery, idempotent handlers, schema evolution and dead-letter handling: see event-driven architecture.',
+        'In large codebases, pattern vocabulary (adapter at the edge, strategy for policy, facade per module) keeps module interfaces small and consistent.',
+      ],
+      realSystems: [
+        'Django signals and SQLAlchemy events (Observer); Django storage and cache backends (Strategy plus Factory).',
+        'Python logging handlers (Observer-like fan-out), requests adapters (Adapter), functools.wraps decorators.',
+        'Kafka, RabbitMQ and Redis pub/sub as distributed Observer; Spring ApplicationEvents in Java.',
+      ],
+      numbersToKnow: [
+        'The Gang of Four book lists 23 patterns in 3 categories (creational, structural, behavioural).',
+        'Practical rule: if an interface has one implementation and no foreseeable second, skip the factory.',
+      ],
+    },
+  },
+  sim: 'observer',
+  worked: null,
+  code: [
+    {
+      lang: 'python',
+      title: 'Python: factory with a registry',
+      code: [
+        'from typing import Protocol',
+        '',
+        'class Notifier(Protocol):',
+        '    def send(self, to: str, msg: str) -> None: ...',
+        '',
+        'class Email:',
+        '    def send(self, to, msg): print(f"email {to}: {msg}")',
+        'class Sms:',
+        '    def send(self, to, msg): print(f"sms {to}: {msg}")',
+        '',
+        '_REGISTRY = {"email": Email, "sms": Sms}',
+        '',
+        'def create_notifier(kind: str) -> Notifier:',
+        '    try:',
+        '        return _REGISTRY[kind]()',
+        '    except KeyError:',
+        '        raise ValueError(f"unknown notifier: {kind}")',
+        '',
+        'create_notifier("sms").send("+1555", "hello")',
+      ].join('\n'),
+      annotations: [
+        { line: 3, text: 'Callers depend on this small interface, not on concrete classes.' },
+        { line: 11, text: 'A dict registry means adding a channel does not edit the factory logic.' },
+        { line: 16, text: 'Fail clearly on unknown input instead of returning None.' },
+      ],
+    },
+    {
+      lang: 'python',
+      title: 'Python: observer with per-observer error isolation',
+      code: [
+        'import logging',
+        '',
+        'class Subject:',
+        '    def __init__(self):',
+        '        self._observers = []',
+        '',
+        '    def subscribe(self, fn):',
+        '        self._observers.append(fn)',
+        '        return lambda: self._observers.remove(fn)   # unsubscribe',
+        '',
+        '    def notify(self, event):',
+        '        for fn in list(self._observers):',
+        '            try:',
+        '                fn(event)',
+        '            except Exception:',
+        '                logging.exception("observer failed")',
+        '',
+        'orders = Subject()',
+        'unsub = orders.subscribe(lambda e: print("audit", e))',
+        'orders.notify("paid")',
+        'unsub()',
+      ].join('\n'),
+      annotations: [
+        { line: 9, text: 'Returning an unsubscribe function prevents leaked observers.' },
+        { line: 12, text: 'Iterating over a copy lets observers unsubscribe during notification.' },
+        { line: 15, text: 'One failing observer is logged and does not block the rest.' },
+      ],
+    },
+  ],
+  interview: [
+    {
+      level: 'beginner',
+      q: 'What is a design pattern?',
+      answer: 'A named, reusable solution idea for a common design problem, such as Factory for creating objects or Observer for notifying listeners. It is a template for thinking, not code you copy.',
+      followUps: ['Name two patterns you have used.', 'Why does a shared vocabulary help a team?'],
+    },
+    {
+      level: 'beginner',
+      q: 'What does the Factory pattern do?',
+      answer: 'It puts the decision of which object to create in one place. The caller asks for a kind of thing (for example "email") and gets an object with the expected interface, without knowing the concrete class.',
+      followUps: ['What problem does it solve compared to using new/constructor everywhere?', 'Give an example in a web app.'],
+    },
+    {
+      level: 'intermediate',
+      q: 'Explain Observer and one risk of it.',
+      answer: 'A subject keeps a list of subscribers and notifies them when its state changes, so it does not need to know who they are. Risks include slow or failing observers blocking others, forgotten unsubscriptions leaking memory, and hard-to-trace chains of side effects.',
+      followUps: ['How would you make notification asynchronous?', 'What are weak references useful for here?'],
+    },
+    {
+      level: 'intermediate',
+      q: 'When is Singleton a bad idea?',
+      answer: 'When it holds mutable shared state: it becomes a hidden global, makes tests depend on order, and misbehaves with multiple processes or threads. Prefer creating one instance at the application edge and injecting it.',
+      followUps: ['How does a Python module act as a singleton?', 'What happens with several gunicorn workers?'],
+    },
+    {
+      level: 'expert',
+      q: 'Django signals are firing in an order nobody can predict and bugs are hard to trace. How do you fix it?',
+      answer: 'Signals hide control flow. Move business logic that must happen into an explicit service function called from the view or command, so the sequence is visible and testable. Keep signals for truly decoupled cross-cutting concerns (cache invalidation, audit) with idempotent handlers, and use transaction.on_commit so side effects run only after the data is saved.',
+      followUps: ['Why on_commit rather than post_save?', 'How do you test signal handlers in isolation?'],
+    },
+    {
+      level: 'expert',
+      q: 'How does in-process Observer differ from a message broker, and what must you add when you move to one?',
+      answer: 'In-process Observer is synchronous, ordered and lost on crash. A broker decouples in time and process, but you must handle at-least-once delivery with idempotent consumers, ordering guarantees per key, retries with backoff and dead-letter queues, schema versioning, and observability of consumer lag. The transactional outbox pattern keeps database writes and event publication consistent.',
+      followUps: ['What is the transactional outbox?', 'How do you handle poison messages?'],
+    },
+  ],
+  quiz: [
+    {
+      level: 'beginner',
+      q: 'Which pattern lets many objects be notified when one object changes?',
+      options: ['Factory', 'Observer', 'Adapter', 'Builder'],
+      answerIndex: 1,
+      why: 'Observer lets subscribers register with a subject and receive updates when it changes.',
+    },
+    {
+      level: 'intermediate',
+      q: 'Why does the Factory pattern support testability?',
+      options: ['It makes code run faster', 'It lets tests supply a fake object through one creation point', 'It removes the need for tests', 'It enforces global state'],
+      answerIndex: 1,
+      why: 'Creation is centralised and callers depend on an interface, so substituting a fake is easy.',
+    },
+    {
+      level: 'intermediate',
+      q: 'An observer raises an exception during notify(). What is a sensible design?',
+      options: ['Let it stop all other observers', 'Catch and log per observer so others still run', 'Remove all observers', 'Restart the server'],
+      answerIndex: 1,
+      why: 'Isolating failures per observer prevents one bad listener from breaking the rest.',
+    },
+    {
+      level: 'expert',
+      q: 'Why should side effects triggered by a database save often run in transaction.on_commit?',
+      options: ['It is faster', 'They should only happen if the transaction actually commits', 'It avoids using signals', 'It encrypts the data'],
+      answerIndex: 1,
+      why: 'If the transaction rolls back, emails or events sent earlier would describe changes that never happened.',
+    },
+  ],
+});

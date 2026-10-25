@@ -1,0 +1,41 @@
+/* Shell layout: top bar, sidebar (off-canvas on small screens), main column. */
+html, body { max-width: 100%; overflow-x: hidden; }
+.topbar {
+  position: sticky; top: 0; z-index: 1030; height: var(--topbar-h);
+  background: var(--glass); border-bottom: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+}
+.topbar-inner { height: 100%; display: flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-3); }
+.topbar-actions { display: flex; align-items: center; gap: var(--sp-1); margin-left: auto; }
+
+.app-shell { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); align-items: start; }
+.sidebar {
+  position: sticky; top: var(--topbar-h); height: calc(100vh - var(--topbar-h)); overflow-y: auto; overscroll-behavior: contain;
+  padding: var(--sp-2); background: var(--glass); border-right: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.app-main { min-width: 0; padding: var(--sp-4) var(--sp-4) var(--sp-6); }
+.app-main:focus { outline: none; }
+.view-narrow { max-width: 960px; margin: 0 auto; }
+.view-wide { max-width: 1120px; margin: 0 auto; }
+
+.drawer-backdrop { position: fixed; inset: 0; z-index: 1039; background: rgba(8, 10, 24, .5); }
+
+@media (max-width: 991.98px) {
+  .app-shell { display: block; }
+  .sidebar {
+    position: fixed; z-index: 1040; top: 0; left: 0; bottom: 0; height: 100vh; width: min(88vw, 340px);
+    background: var(--surface); transform: translateX(-102%); box-shadow: var(--shadow-2);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .sidebar.is-open { transform: translateX(0); }
+  .app-main { padding: var(--sp-3) var(--sp-2) var(--sp-5); }
+  .topbar-inner { padding: 0 var(--sp-2); gap: var(--sp-1); }
+}
+@media (max-width: 575.98px) {
+  .brand-text, .search-hint, .search-trigger kbd { display: none; }
+  .search-trigger { flex: 0 0 auto; width: 40px; justify-content: center; padding: 0; }
+}
+@media (min-width: 992px) {
+  .only-mobile { display: none !important; }
+}
