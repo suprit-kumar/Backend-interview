@@ -1,0 +1,198 @@
+/* Testing: Unit Testing. */
+Atlas.topics.push({
+  id: 'unit-testing',
+  category: 'testing',
+  title: 'Unit Testing',
+  source: {
+    description: 'Test one function in isolation.',
+    steps: ['Arrange', 'Act', 'Assert', 'Mock dependencies'],
+  },
+  estMinutes: 9,
+  prereqs: ['testing'],
+  related: ['testing', 'integration-testing', 'solid-principles', 'clean-code'],
+  tags: ['arrange act assert', 'mock', 'stub', 'fixture', 'pytest', 'parametrize', 'dependency injection'],
+  visual: {
+    type: 'pipeline',
+    config: { stages: [{ id: 'arr', label: 'Arrange', sub: 'set up input' }, { id: 'act', label: 'Act', sub: 'call function' }, { id: 'ass', label: 'Assert', sub: 'check result' }, { id: 'mock', label: 'Mock', sub: 'fake the DB' }] },
+  },
+  steps: [
+    {
+      label: 'Arrange',
+      caption: {
+        beginner: 'Set up the situation you want to test.',
+        intermediate: 'Build the inputs, objects and fixtures the function needs.',
+        expert: 'Use factories or builders for readable data, and keep arrangement small: a huge setup is a design smell.',
+      },
+      state: { active: ['arr'], payload: { arr: 'cart = [2 x 1000]' } },
+      hood: 'Large arrange blocks signal too many dependencies.',
+    },
+    {
+      label: 'Act',
+      caption: {
+        beginner: 'Run the one thing being tested.',
+        intermediate: 'Call exactly one function or method under test.',
+        expert: 'A single act keeps failures diagnosable. Several acts mean the test covers several behaviours.',
+      },
+      state: { active: ['arr', 'act'], payload: { arr: 'cart = [2 x 1000]', act: 'total(cart)' } },
+      hood: 'One behaviour per test.',
+    },
+    {
+      label: 'Assert',
+      caption: {
+        beginner: 'Check that the answer is what you expected.',
+        intermediate: 'Assert on the observable result or state, such as return value, raised exception or stored record.',
+        expert: 'Assert outcomes, not internal calls. Use approximate comparison for floats and avoid asserting on incidental details.',
+      },
+      state: { active: ['act', 'ass'], payload: { act: 'total(cart)', ass: '2000 == 2000 OK' } },
+      hood: 'pytest.approx for floats.',
+    },
+    {
+      label: 'Mock dependencies',
+      caption: {
+        beginner: 'Replace slow or risky parts, like the real database, with a harmless fake.',
+        intermediate: 'Replace I/O such as databases, HTTP and clocks with stubs or fakes injected into the code, so the test is fast and deterministic.',
+        expert: 'Mock at the boundary you own, prefer fakes over call-sequence mocks, and verify the real adapter in integration tests.',
+      },
+      state: { active: ['mock', 'ass'], payload: { mock: 'FakeRepo (in memory)', ass: 'no network, 2 ms' } },
+      hood: 'Over-mocking couples tests to implementation.',
+    },
+  ],
+  levels: {
+    beginner: {
+      analogy: 'Testing a single bicycle brake on a workbench. You hold the lever, watch the pad move, and check it grips. You do not need the whole bike or a road to know if that part works.',
+      explanation: 'A unit test runs one small piece of code with chosen inputs and checks the result. It runs in milliseconds, so you can run hundreds many times a day.',
+      keyTerms: [
+        { term: 'Arrange', meaning: 'Prepare the inputs and objects.' },
+        { term: 'Act', meaning: 'Run the code being tested.' },
+        { term: 'Assert', meaning: 'Check the result.' },
+        { term: 'Mock', meaning: 'A fake object standing in for a real one.' },
+        { term: 'Fixture', meaning: 'Reusable test setup.' },
+      ],
+    },
+    intermediate: {
+      explanation: 'Unit tests follow arrange-act-assert, isolate the unit from I/O with injected fakes, cover edge cases through parametrisation and stay deterministic by controlling time and randomness.',
+      howItWorks: [
+        'Design code so dependencies are passed in.',
+        'Arrange inputs and fakes.',
+        'Call the unit once.',
+        'Assert on the result or state.',
+        'Parametrise to cover edge cases.',
+        'Run in milliseconds on every save and push.',
+      ],
+      tradeoffs: {
+        use: [
+          'Use unit tests for pure logic, calculations and branching.',
+          'Use fakes for databases and HTTP to keep tests fast.',
+          'Use parametrised tests for many input and output pairs.',
+        ],
+        avoid: [
+          'Avoid mocking everything, including the code under test.',
+          'Avoid tests that touch the network, disk or real clock.',
+          'Avoid asserting on private methods.',
+        ],
+      },
+      pitfalls: [
+        'Tests that pass while the real database query is wrong.',
+        'Mocks that return what the code expects, proving nothing.',
+        'Shared mutable state between tests.',
+        'Using the real current time or random values.',
+        'Huge test methods with many asserts on different behaviours.',
+      ],
+    },
+    expert: {
+      internals: [
+        'pytest collects functions named test_*, resolves fixtures by name with scopes, and rewrites assert statements to show intermediate values.',
+        'unittest.mock patches names where they are looked up, not where defined; autospec keeps mocks consistent with the real signature.',
+        'Hypothesis shrinks failing inputs to a minimal counterexample.',
+        'Freezing time (freezegun) and seeding randomness make time-dependent logic deterministic.',
+      ],
+      failureModes: [
+        'Patching the wrong import path so the real dependency runs.',
+        'Mocks drifting from the real API and giving false passes.',
+        'Test order dependencies from module-level state.',
+        'Tests too coupled to implementation breaking on every refactor.',
+      ],
+      scalingNotes: [
+        'Run with pytest-xdist in parallel; keep tests independent.',
+        'Keep unit tests under a few milliseconds each so the suite stays under seconds per thousand.',
+        'Use contract or integration tests to verify what mocks assume.',
+      ],
+      realSystems: [
+        'pytest, unittest.mock, Hypothesis, freezegun, pytest-mock, factory_boy.',
+        'JUnit and Mockito, Jest.',
+        'mutmut and cosmic-ray for mutation testing.',
+      ],
+      numbersToKnow: [
+        'A good unit test usually runs in under about 10 ms. // VERIFY',
+        'A suite of thousands of unit tests should finish in seconds to a minute.',
+        'Test-driven development cycles through red, green, refactor in minutes.',
+      ],
+    },
+  },
+  sim: null,
+  worked: null,
+  code: [
+    {
+      lang: 'python',
+      title: 'Unit test with a fake repository',
+      code: [
+        'import pytest',
+        '',
+        'class FakeRepo:',
+        '    def __init__(self, users): self.users = users',
+        '    def get(self, uid): return self.users.get(uid)',
+        '',
+        'def greet(repo, uid):',
+        '    user = repo.get(uid)',
+        '    if user is None:',
+        '        raise LookupError(uid)',
+        '    return f"Hello {user}"',
+        '',
+        '@pytest.mark.parametrize("uid,expected", [(1, "Hello Asha"), (2, "Hello Ben")])',
+        'def test_greet(uid, expected):',
+        '    repo = FakeRepo({1: "Asha", 2: "Ben"})',
+        '    assert greet(repo, uid) == expected',
+        '',
+        'def test_greet_missing_user():',
+        '    with pytest.raises(LookupError):',
+        '        greet(FakeRepo({}), 9)',
+      ].join('\n'),
+      annotations: [
+        { line: 3, text: 'A fake with real behaviour avoids touching a database.' },
+        { line: 7, text: 'The dependency is injected, which makes the unit testable.' },
+        { line: 13, text: 'Parametrisation covers several cases without duplication.' },
+        { line: 19, text: 'Error paths are tested as behaviour.' },
+      ],
+    },
+    {
+      lang: 'python',
+      title: 'Mock an HTTP call',
+      code: [
+        'from unittest.mock import patch',
+        '',
+        'def test_fetch_rate():',
+        '    with patch("app.fx.requests.get") as get:',
+        '        get.return_value.json.return_value = {"rate": 83.1}',
+        '        assert convert(10) == 831',
+      ].join('\n'),
+      annotations: [
+        { line: 4, text: 'Patch where the name is used (app.fx), not where it is defined.' },
+        { line: 5, text: 'Stub the response so no network is used.' },
+      ],
+    },
+  ],
+  interview: [
+    { level: 'beginner', q: 'What is a unit test?', answer: 'A fast automated test of one small unit of code, such as a function, in isolation.', followUps: ['Why keep it small?'] },
+    { level: 'beginner', q: 'What does arrange-act-assert mean?', answer: 'Set up inputs, run the code under test, then check the result. It keeps tests clear and focused.', followUps: ['Can you have several asserts?'] },
+    { level: 'intermediate', q: 'Mock vs stub vs fake?', answer: 'A stub returns canned answers. A mock records calls so you can verify interactions. A fake is a working lightweight implementation, such as an in-memory repository.', followUps: ['Which do you prefer and why?'] },
+    { level: 'intermediate', q: 'How do you make code easy to unit test?', answer: 'Inject dependencies, keep functions small and pure where possible, and separate I/O from logic.', followUps: ['How does that relate to SOLID?'] },
+    { level: 'expert', q: 'A test passes with mocks but production fails. Why, and how do you prevent it?', answer: 'The mock encoded a wrong assumption about the real dependency. Use autospec, verify adapters in integration tests with real services, add contract tests and prefer fakes validated against the real thing.', followUps: ['Where do you draw the mocking boundary?'] },
+    { level: 'expert', q: 'How do you test time-dependent or random logic?', answer: 'Inject a clock and random source, or freeze time and seed randomness, and test boundary instants. Use property-based tests for invariants.', followUps: ['What about timezones and DST?'] },
+  ],
+  quiz: [
+    { level: 'beginner', q: 'A unit test checks...', options: ['One small piece of code', 'The whole system', 'The network', 'The UI only'], answerIndex: 0, why: 'It is isolated and fast.' },
+    { level: 'intermediate', q: 'Why replace a database with a fake in a unit test?', options: ['Speed and determinism', 'To skip assertions', 'To hide bugs', 'To save disk'], answerIndex: 0, why: 'No I/O means fast, repeatable tests.' },
+    { level: 'intermediate', q: 'With unittest.mock you patch...', options: ['Where the name is looked up', 'Where it is defined always', 'The test file name', 'The Python version'], answerIndex: 0, why: 'Patch the import used by the code under test.' },
+    { level: 'expert', q: 'The main risk of over-mocking is...', options: ['Passing tests that do not reflect reality', 'Tests running too fast', 'Too much coverage', 'Missing fixtures'], answerIndex: 0, why: 'Mocks can encode wrong assumptions.' },
+  ],
+});

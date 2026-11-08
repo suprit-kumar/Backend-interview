@@ -57,7 +57,8 @@
     function update(i) {
       const st = topic.steps[i].state || {};
       const from = series.map(o => o.now.slice());
-      const to = series.map(o => ((st.series || {})[o.s.id] || o.s.values));
+      // A null means "not measured yet": hold the last real value so the line stops there.
+      const to = series.map(o => { let last = 0; return ((st.series || {})[o.s.id] || o.s.values).map(v => (last = v === null ? last : v)); });
       series.forEach(o => { o.hide = (st.hide || []).indexOf(o.s.id) !== -1; });
       $mark.attr('visibility', st.mark === undefined ? 'hidden' : 'visible').attr({ x1: px(st.mark || 0), x2: px(st.mark || 0) });
       anim.run(700, t => { series.forEach((o, k) => { o.now = to[k].map((v, j) => V.lerp(from[k][j] === undefined ? v : from[k][j], v, t)); }); paint(); });

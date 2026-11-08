@@ -1,0 +1,207 @@
+/* Testing: Integration Testing. */
+Atlas.topics.push({
+  id: 'integration-testing',
+  category: 'testing',
+  title: 'Integration Testing',
+  source: {
+    description: 'Test components working together.',
+    steps: ['Start real DB or service', 'Call through the layers', 'Assert results', 'Tear down'],
+  },
+  estMinutes: 9,
+  prereqs: ['unit-testing', 'sql'],
+  related: ['unit-testing', 'api-testing', 'docker', 'ci-cd'],
+  tags: ['testcontainers', 'test database', 'fixtures', 'transaction rollback', 'contract testing', 'docker compose'],
+  visual: {
+    type: 'topology',
+    config: {
+      nodes: [
+        { id: 'test', label: 'Test', kind: 'client', x: 8, y: 50 },
+        { id: 'api', label: 'API', kind: 'service', x: 36, y: 50 },
+        { id: 'db', label: 'Postgres (container)', kind: 'db', x: 66, y: 28 },
+        { id: 'mq', label: 'Queue', kind: 'queue', x: 66, y: 72 },
+      ],
+      edges: [{ from: 'test', to: 'api' }, { from: 'api', to: 'db' }, { from: 'api', to: 'mq' }],
+    },
+  },
+  steps: [
+    {
+      label: 'Start real DB or service',
+      caption: {
+        beginner: 'Start the real parts, not fakes, so the test is realistic.',
+        intermediate: 'Start a real database or broker in a container (docker compose or Testcontainers) and apply migrations.',
+        expert: 'Reuse one container per session for speed and isolate each test with transactions or schemas. Pin image versions to match production.',
+      },
+      state: { active: ['db', 'mq'], badges: { db: 'migrated', mq: 'up' }, packets: [] },
+      hood: 'Container reuse vs per-test isolation is the key trade-off.',
+    },
+    {
+      label: 'Call through the layers',
+      caption: {
+        beginner: 'The test uses the app the way a real user would.',
+        intermediate: 'Send a request through the API, service and repository layers so real SQL and serialisation run.',
+        expert: 'Calling the public interface exercises wiring, transactions and middleware, which are precisely what mocks hide.',
+      },
+      state: { active: ['api'], packets: [{ from: 'test', to: 'api', tone: 'ok', label: 'POST /orders' }, { from: 'api', to: 'db', tone: 'ok', label: 'INSERT' }, { from: 'api', to: 'mq', tone: 'ok', label: 'publish' }] },
+      hood: 'Exercises transaction boundaries and serialisation.',
+    },
+    {
+      label: 'Assert results',
+      caption: {
+        beginner: 'Check that the right things were saved and sent.',
+        intermediate: 'Assert on the response, the rows in the database and the message on the queue.',
+        expert: 'Poll with a timeout for asynchronous effects instead of sleeping, and assert on observable outcomes only.',
+      },
+      state: { active: ['test', 'db', 'mq'], badges: { db: '1 row', mq: '1 msg' }, packets: [{ from: 'db', to: 'api', tone: 'ok', label: 'row' }, { from: 'api', to: 'test', tone: 'ok', label: '201' }] },
+      hood: 'Use eventual-assert helpers, not time.sleep.',
+    },
+    {
+      label: 'Tear down',
+      caption: {
+        beginner: 'Clean up so the next test starts fresh.',
+        intermediate: 'Roll back the transaction, truncate tables or drop the schema so tests do not affect each other.',
+        expert: 'Leaked state causes order-dependent failures. Fail-safe teardown must run even when the test fails.',
+      },
+      state: { active: ['db'], badges: { db: 'rolled back', mq: 'purged' }, packets: [] },
+      hood: 'Transaction rollback is fastest; truncate for committed data.',
+    },
+  ],
+  levels: {
+    beginner: {
+      analogy: 'Test-driving a car after assembly. The brake, engine and steering each passed their own checks, but only a drive shows whether they work together on a real road.',
+      explanation: 'An integration test runs several parts of your system together, often with a real database, to check that they cooperate correctly.',
+      keyTerms: [
+        { term: 'Integration test', meaning: 'A test of several parts working together.' },
+        { term: 'Test container', meaning: 'A throwaway real service started for the test.' },
+        { term: 'Migration', meaning: 'A script that creates the database structure.' },
+        { term: 'Teardown', meaning: 'Cleaning up after a test.' },
+        { term: 'Isolation', meaning: 'Tests not affecting each other.' },
+      ],
+    },
+    intermediate: {
+      explanation: 'Integration tests verify real wiring: SQL, ORM mappings, transactions, serialisation and messaging. They are slower than unit tests, so use real dependencies for the boundaries that matter and isolate tests for repeatability.',
+      howItWorks: [
+        'Start real dependencies in containers.',
+        'Run migrations to build the schema.',
+        'Begin each test with clean data or a transaction.',
+        'Call the app through its public interface.',
+        'Assert on responses, rows and messages.',
+        'Tear down or roll back.',
+      ],
+      tradeoffs: {
+        use: [
+          'Use them for repositories, SQL queries and ORM behaviour.',
+          'Use them where transactions, locks or constraints matter.',
+          'Use them to verify message producers and consumers.',
+        ],
+        avoid: [
+          'Avoid using them for every logic branch; unit tests are cheaper.',
+          'Avoid shared long-lived test databases.',
+          'Avoid depending on third-party services you cannot control.',
+        ],
+      },
+      pitfalls: [
+        'Testing against SQLite while production uses Postgres.',
+        'Tests depending on data left by other tests.',
+        'Using sleep to wait for async work.',
+        'Hitting real third-party APIs, causing flakiness and cost.',
+        'Slow suites because every test rebuilds the database.',
+      ],
+    },
+    expert: {
+      internals: [
+        'Testcontainers starts Docker containers programmatically, waits for readiness and exposes mapped ports to tests.',
+        'Per-test isolation options: wrap in a transaction and roll back, truncate tables, or use a schema or template database per worker.',
+        'Transaction-rollback isolation cannot test code that commits or uses separate connections.',
+        'Contract testing (Pact) verifies service boundaries without deploying both sides.',
+      ],
+      failureModes: [
+        'Differences between test and production engine versions hiding bugs.',
+        'Port or container start races causing flaky startup.',
+        'Parallel tests colliding on one database.',
+        'CI environments without Docker access.',
+      ],
+      scalingNotes: [
+        'Run one container per worker and isolate with schemas or databases.',
+        'Use template databases to clone a migrated schema quickly.',
+        'Stub external third parties with recorded or fake servers.',
+      ],
+      realSystems: [
+        'Testcontainers (Python, Java, Go), docker compose, pytest fixtures, pytest-postgresql.',
+        'WireMock and responses for HTTP stubs, LocalStack for AWS.',
+        'Pact for consumer-driven contracts.',
+      ],
+      numbersToKnow: [
+        'A Postgres container typically starts in a few seconds, so reuse it per session.',
+        'Integration tests commonly take tens to hundreds of milliseconds each. // VERIFY',
+        'Keep the integration suite to minutes in CI.',
+      ],
+    },
+  },
+  sim: null,
+  worked: null,
+  code: [
+    {
+      lang: 'python',
+      title: 'pytest with Testcontainers and rollback',
+      code: [
+        'import pytest',
+        'from testcontainers.postgres import PostgresContainer',
+        'from sqlalchemy import create_engine, text',
+        '',
+        '@pytest.fixture(scope="session")',
+        'def engine():',
+        '    with PostgresContainer("postgres:16") as pg:',
+        '        eng = create_engine(pg.get_connection_url())',
+        '        run_migrations(eng)',
+        '        yield eng',
+        '',
+        '@pytest.fixture',
+        'def conn(engine):',
+        '    with engine.connect() as c:',
+        '        tx = c.begin()',
+        '        yield c',
+        '        tx.rollback()',
+        '',
+        'def test_insert_order(conn):',
+        '    conn.execute(text("INSERT INTO orders(id) VALUES (1)"))',
+        '    assert conn.execute(text("SELECT count(*) FROM orders")).scalar() == 1',
+      ].join('\n'),
+      annotations: [
+        { line: 5, text: 'One container per test session keeps the suite fast.' },
+        { line: 7, text: 'Pin the same major Postgres version as production.' },
+        { line: 17, text: 'Rollback leaves the database clean for the next test.' },
+        { line: 21, text: 'Real SQL runs against a real engine.' },
+      ],
+    },
+    {
+      lang: 'yaml',
+      title: 'docker compose for test dependencies',
+      code: [
+        'services:',
+        '  db:',
+        '    image: postgres:16',
+        '    environment: { POSTGRES_PASSWORD: test }',
+        '    ports: ["5433:5432"]',
+        '    healthcheck:',
+        '      test: ["CMD", "pg_isready", "-U", "postgres"]',
+      ].join('\n'),
+      annotations: [
+        { line: 6, text: 'A healthcheck lets tests wait until the database is ready.' },
+      ],
+    },
+  ],
+  interview: [
+    { level: 'beginner', q: 'What is an integration test?', answer: 'A test that checks several components working together, often including a real database.', followUps: ['How is it different from a unit test?'] },
+    { level: 'beginner', q: 'Why use a real database in some tests?', answer: 'Queries, constraints and transactions behave differently from mocks, so real behaviour catches bugs mocks hide.', followUps: ['What is the downside?'] },
+    { level: 'intermediate', q: 'How do you keep integration tests isolated?', answer: 'Roll back a transaction per test, truncate tables, or use a separate schema or database per test or worker. Never rely on data from another test.', followUps: ['When does rollback not work?'] },
+    { level: 'intermediate', q: 'Why not test against SQLite when production uses Postgres?', answer: 'SQL dialects, types, locking and constraint behaviour differ, so tests can pass while production fails. Use the same engine and version via containers.', followUps: ['How do you start it in CI?'] },
+    { level: 'expert', q: 'Your integration suite is slow and flaky. What do you do?', answer: 'Reuse containers per session, isolate by transaction or schema, run in parallel with per-worker databases, replace sleeps with polling asserts, stub third-party services, and move logic coverage down to unit tests.', followUps: ['How do you detect order dependence?'] },
+    { level: 'expert', q: 'How do you test the boundary between two teams\' services?', answer: 'Use consumer-driven contract tests: consumers publish expectations, the provider verifies them in its pipeline. Keep a few end-to-end smoke tests for the full chain.', followUps: ['How do contracts evolve safely?'] },
+  ],
+  quiz: [
+    { level: 'beginner', q: 'Integration tests check...', options: ['Parts working together', 'One function alone', 'Font rendering', 'DNS speed'], answerIndex: 0, why: 'They test real collaboration.' },
+    { level: 'intermediate', q: 'A good way to isolate DB tests is...', options: ['Roll back a transaction per test', 'Share one dirty database', 'Never clean up', 'Use production data'], answerIndex: 0, why: 'It leaves no state behind.' },
+    { level: 'intermediate', q: 'Why match the production DB engine in tests?', options: ['Behaviour differs between engines', 'It is cheaper', 'To reduce coverage', 'No reason'], answerIndex: 0, why: 'Dialect and locking differences cause surprises.' },
+    { level: 'expert', q: 'Contract tests are used to...', options: ['Verify service boundaries without full deployments', 'Replace all unit tests', 'Measure latency', 'Encrypt traffic'], answerIndex: 0, why: 'Consumer expectations are checked against the provider.' },
+  ],
+});

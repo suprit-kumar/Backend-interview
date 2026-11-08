@@ -13,12 +13,16 @@ Plan and schema: `docs/PLAN.md`. Project rules: `.github/copilot-instructions.md
 | 1. Design system + app shell | Done |
 | 2. Visual/interaction engine | Done |
 | 3. Port 10 sims + 14 worked examples | Done |
-| 4. Content authoring | **64 of 77 topics written** (last commit `eb1abe2`) |
-| 5. Final verification | Not started |
+| 4. Content authoring | **Done: 77 of 77 topics written** |
+| 5. Final verification | `Atlas.verify()` 19/19, written 77; manual QA still open (see below) |
 
-`Atlas.verify()` currently: 19/19 checks pass, `written: 64`.
+`Atlas.verify()` currently: 19/19 checks pass, `written: 77`.
 
-## Remaining topics (13)
+## Remaining topics
+
+None. All 77 topics are authored. The "how to author" notes below remain as a template for future topics.
+
+(Historical list of the last 13 topics, now complete: Observability 5, Security 3, Testing 5.)
 
 Get each topic's exact `description`, `steps` and visualType from `data/meta.js`:
 
