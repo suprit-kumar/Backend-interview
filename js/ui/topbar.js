@@ -18,6 +18,28 @@
       .html(A.util.icon(dark ? 'sun-fill' : 'moon-stars-fill'));
   }
 
+  const SITES = [
+    { label: 'Web API', url: 'https://suprit-kumar.github.io/webapi/', icon: 'globe2' },
+    { label: 'Architecture', url: 'https://suprit-kumar.github.io/architecture/', icon: 'diagram-3' },
+    { label: 'Concurrency', url: 'https://suprit-kumar.github.io/concurrency/', icon: 'cpu' },
+    { label: 'Performance', url: 'https://suprit-kumar.github.io/performance/', icon: 'speedometer2' },
+  ];
+
+  function sitesMenu() {
+    const items = SITES.map((s) =>
+      '<li><a class="sites-item" role="menuitem" href="' + s.url + '" target="_blank" rel="noopener noreferrer">' +
+      A.util.icon(s.icon) + '<span>' + s.label + '</span>' + A.util.icon('box-arrow-up-right') + '</a></li>').join('');
+    return '<div class="sites-menu">' +
+      '<button type="button" class="sites-toggle js-sites" aria-haspopup="true" aria-expanded="false" aria-controls="sites-list">' +
+        A.util.icon('grid-3x3-gap') + '<span class="sites-label">👀 Curious? Click to explore with visualization!</span>' + A.util.icon('chevron-down') + '</button>' +
+      '<ul id="sites-list" class="sites-list" role="menu" aria-label="Related sites" hidden>' + items + '</ul></div>';
+  }
+
+  function setSites(open) {
+    $('#topbar .js-sites').attr('aria-expanded', open);
+    $('#sites-list').prop('hidden', !open);
+  }
+
   A.topbar = {
     render() {
       $('#topbar').html(
@@ -27,11 +49,14 @@
             '<span class="brand-text">Backend Interview <b>Atlas</b></span></a>' +
           '<button type="button" class="search-trigger js-search" aria-label="Search topics (Control K)">' + A.util.icon('search') +
             '<span class="search-hint">Search topics, tags, ideas</span><kbd>Ctrl</kbd><kbd>K</kbd></button>' +
-          '<div class="topbar-actions"><a class="progress-ring js-ring" href="#/home" title="Overall progress"></a><span class="js-theme-slot"></span></div>' +
+          '<div class="topbar-actions">' + sitesMenu() + '<a class="progress-ring js-ring" href="#/home" title="Overall progress"></a><span class="js-theme-slot"></span></div>' +
         '</div>');
       A.topbar.refresh();
       $('#topbar').on('click', '.js-menu', () => A.sidebar.open());
       $('#topbar').on('click', '.js-search', () => A.palette.open());
+      $('#topbar').on('click', '.js-sites', (e) => { e.stopPropagation(); setSites($('#sites-list').prop('hidden')); });
+      $(document).on('click', (e) => { if (!$(e.target).closest('.sites-menu').length) setSites(false); });
+      $(document).on('keydown', (e) => { if (e.key === 'Escape' && !$('#sites-list').prop('hidden')) { setSites(false); $('#topbar .js-sites').trigger('focus'); } });
       $('#topbar').on('click', '.js-theme', () => { A.theme.toggle(); A.topbar.refresh(); });
     },
     refresh() {
