@@ -94,3 +94,9 @@ docs/       PLAN.md, REMAINING_WORK.md, screenshots/
 ## Tech
 
 HTML5, CSS3, jQuery 3.7.1, Bootstrap 5.3, Bootstrap Icons, highlight.js, Inter and JetBrains Mono.
+
+## There are few more
+- https://suprit-kumar.github.io/webapi/
+- https://suprit-kumar.github.io/architecture/
+- https://suprit-kumar.github.io/concurrency/
+- https://suprit-kumar.github.io/performance/
